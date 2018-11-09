@@ -429,7 +429,7 @@ class Engine {
         this.dyn_objects.push(element)
       }
     })
-    console.log(this.dyn_objects)
+    // console.log(this.dyn_objects)
   }
 
   binds() {
