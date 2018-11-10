@@ -164,20 +164,20 @@ class PointMass {
             this.pos.x = rel_pos.x + this.norpt.x
             this.pos.y = rel_pos.y + this.norpt.y
             if(element.normalPoint(this.prev_pos.x, this.prev_pos.y, closest_edges[0], closest_edges[1])[0] > this.side/2 + 1*px) {
+              // console.log("A block hit an incline")
               let rel_vel_x = this.vel.mag()*sin(element.sidangle)
               if(this.vel.y > 0) {
                 this.vel.y = rel_vel_x*sin(element.sidangle)
               } else {
                 this.vel.y = - rel_vel_x*sin(element.sidangle)
               }
-              if(this.vel.x > 0) {
+              if(this.vel.x >= 0) {
                 this.vel.x = rel_vel_x*cos(element.sidangle)
               } else {
                 this.vel.x = - rel_vel_x*cos(element.sidangle)
               }
             }
             let rel_normal = createVector(0,0)
-            // console.log(1, this.forces)
             let force_in_nor = this.forces.y*cos(element.sidangle) + this.forces.x*sin(element.sidangle)
             if(force_in_nor < 0) {
               rel_normal.y = - force_in_nor
