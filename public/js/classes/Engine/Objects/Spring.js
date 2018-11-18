@@ -92,7 +92,16 @@ class Spring {
     scl = savescl
   }
 
+  openControl() {}
+
   mouseisover() {
     return false
+  }
+
+  remove() {
+    if(this.located) {
+      engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
+    }
+    engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
   }
 }

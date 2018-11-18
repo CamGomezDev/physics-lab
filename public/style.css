@@ -1,0 +1,40 @@
+*{
+  padding:0;margin:0;font-family:'Roboto',sans-serif;font-size:15px
+}
+#canvas{
+  background-color:#fff;
+  display:block;
+  position:absolute;
+  margin:auto;
+  top:8px;
+  left:8px;
+  border:1px solid black
+}
+#panel{
+  display:block;
+  position:absolute;
+  right:8px;
+  top:8px;
+  width:300px;
+  border:1px solid black
+}
+button{
+  margin-left: 10px;
+  margin-bottom: 0px;
+  margin-top: 10px;
+  color: black!important;
+  border-radius: 0px!important;
+  padding-top: 3px!important;
+  padding-bottom: 3px!important;
+  padding-left: 8px!important;
+  padding-right: 8px!important;
+}
+.no-outline:focus,
+.no-outline:active{
+  box-shadow:none !important;
+  outline:0px !important;
+}
+.bottom{
+  position: absolute;
+  bottom: 0;
+}

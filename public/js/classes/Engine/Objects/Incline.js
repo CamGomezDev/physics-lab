@@ -1,5 +1,6 @@
 class Incline {
   constructor() {
+    this.id = uuidv4()
     this.located = false
     this.height = 1.5
     this.width = 3
@@ -85,6 +86,10 @@ class Incline {
     let dist = ((x - norpt.x)**2 + (y - norpt.y)**2)**0.5
 
     return [dist, norpt]
+  }
+
+  openControl() {
+    PerformanceObserverEntryList
   }
 
   mouseisover() {

@@ -16,6 +16,5 @@ class Floor {
 
   remove() {
     engine.still_objects.splice(engine.still_objects.indexOf(this), 1)
-    renderCanvas()
   }
 }

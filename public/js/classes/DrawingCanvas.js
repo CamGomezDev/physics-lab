@@ -38,14 +38,12 @@ class DrawingCanvas {
   // }
 
   pressed() {
-    if(this.mouseisover()) {
-      this.mousepressed = true
-      this.prevmouse = createVector(mouseX, mouseY)
-    }
+    this.mousepressed = true
+    this.prevmouse = createVector(mouseX, mouseY)
   }
 
   dragged() {
-    if(this.mouseisover() && this.mousepressed) {
+    if(this.mousepressed) {
       this.transqueue.x = mouseX - this.prevmouse.x
       this.transqueue.y = this.prevmouse.y - mouseY
       this.prevmouse.x = mouseX
@@ -60,9 +58,6 @@ class DrawingCanvas {
   }
 
   grid() {
-    fill(255)
-    stroke(255)
-    rect(this.x, this.y, this.width, height - 1)
     stroke(200)
 
     let xx
@@ -82,34 +77,64 @@ class DrawingCanvas {
     if(this.width - lastx*scl < xx) {
       lastx = lastx - 1
     }
-    let lasty = floor(this.width/scl)
-    if(this.width - lasty*scl < xy) {
+    let lasty = floor(height/scl)
+    if(height - lasty*scl < xy) {
       lasty = lasty - 1
     }
 
+    textAlign(CENTER, CENTER)
+    textFont('Calibri')
+    fill(0)
+    textSize(16)
     for(let i = 0; i < lastx + 1; i++) {
       line(xx + this.x + scl*i, this.y, xx + this.x + scl*i, this.y + height)
+      if(abs(xx + this.x + scl*i) > 1) {
+        push()
+        if(this.y > -18) {
+          translate(xx + this.x + scl*i, this.y + 20)
+        } else if (this.y < -height) {
+          translate(xx + this.x + scl*i, this.y + height)
+        } else {
+          translate(xx + this.x + scl*i, 0)
+        }
+        scale(1, -1)
+        text(((xx + this.x + scl*i)/scl).toFixed(0), 0, 10)
+        pop()
+      }
     }
     for(let i = 0; i < lasty + 1; i++) {
       line(this.x, xy + this.y + scl*i, this.x + this.width, xy + this.y + scl*i)
+      push()
+      if(this.x > -22) {
+        translate(this.x + 22, xy + this.y + scl*i)
+      } else if (this.x < -width) {
+        translate(this.x + width, xy + this.y + scl*i)
+      } else {
+        translate(0, xy + this.y + scl*i)
+      }
+      scale(1, -1)
+      if(abs(xy + this.y + scl*i) > 1) {
+        text(((xy + this.y + scl*i)/scl).toFixed(0), -10, 0)
+      }
+      pop()
     }
   }
 
   frame() {
     fill(color(255,255,255,0))
     stroke(0)
-    rect(this.x, this.y, this.width, height - 1)
+    rect(0, 0, width - 1, height - 1)
   }
 
   drawAxis() {
     stroke(0)
-    line(-scl, 0, scl, 0)
-    line(0, -scl, 0, scl)
+    line(this.x, 0, this.x + width, 0)
+    line(0, this.y, 0, this.y + height)
   }
 
   late() {
-    this.frame()
     this.drawAxis()
+    this.frame()
   }
 
   mouseisover() {

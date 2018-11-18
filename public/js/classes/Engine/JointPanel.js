@@ -20,15 +20,24 @@ class JointPanel {
   createPointMass() {
     engine.dyn_objects_dis.push(new PointMass())
     engine.objectonhold = true
+    engine.justAdded = true
   }
 
   createSpring() {
     engine.dyn_objects_dis.push(new Spring())
     engine.objectonhold = true
+    engine.justAdded = true
   }
 
   createIncline() {
     engine.dyn_objects_dis.push(new Incline())
     engine.objectonhold = true
+    engine.justAdded = true
+  }
+
+  createGraph() {
+    engine.dyn_objects_dis.push(new Graph())
+    engine.objectonhold = true
+    engine.justAdded = true
   }
 }

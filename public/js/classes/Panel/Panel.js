@@ -1,36 +1,90 @@
 class Panel {
   constructor() {
     this.width = 300
-    this.height = height
-    this.x = width - this.width
-    this.y = 0
+    this.theresControl = false
+    this.controlFocusId
+    this.focus
+
+    document.getElementById("floor-toggle").onchange = function() {
+      if(this.checked) {
+        engine.jointpanel.placeFloor()
+      } else {
+        engine.jointpanel.removeFloor()
+      }
+    }
+    document.getElementById("gravity-toggle").onchange = function() {
+      if(this.checked) {
+        engine.jointpanel.placeGravity()
+      } else {
+        engine.jointpanel.removeGravity()
+      }
+    }
+
+    document.getElementById("point-mass").onclick = function() {
+      engine.jointpanel.createPointMass()
+    }
+    document.getElementById("spring").onclick = function() {
+      engine.jointpanel.createSpring()
+    }
+    document.getElementById("incline").onclick = function() {
+      engine.jointpanel.createIncline()
+    }
+    document.getElementById("graph").onclick = function() {
+      engine.jointpanel.createGraph()
+    }
+
+    document.getElementById("zoomin").onclick = function() {
+      drawingcnv.zoomin()
+    }
+    document.getElementById("zoomout").onclick = function() {
+      drawingcnv.zoomout()
+    }
+
+    document.getElementById("run").onclick = function() {
+      if(!this.classList.contains("active")) {
+        this.classList.add("active")
+      }
+      if(document.getElementById("stop").classList.contains("active")) {
+        document.getElementById("stop").classList.remove("active")
+      }
+      engine.run()
+    }
+    document.getElementById("stop").onclick = function() {
+      if(!this.classList.contains("active")) {
+        this.classList.add("active")
+      }
+      if(document.getElementById("run").classList.contains("active")) {
+        document.getElementById("run").classList.remove("active")
+      }
+      engine.stop()
+    }
   }
 
-  subs() {
-    this.controlpanel = new ControlPanel(this.x, this.width)
-    this.graphpanel = new GraphPanel(this.x, this.width)
-    this.graphpanel.plot()
+  openControl(id) {
+    this.theresControl = true
+    this.controlFocusId = id
+    engine.dyn_objects.forEach(element => {
+      if(element.id == this.controlFocusId) {
+        this.focus = element
+      }
+    })
+    engine.graphs.forEach(element => {
+      if(element.id == this.controlFocusId) {
+        this.focus = element
+      }
+    })
+    if(this.focus.ispointmass) {
+      this.interior = new PointMassPanel(this.focus)
+    } else if(this.focus.isgraph) {
+      this.interior = new GraphPanel(this.focus)
+    }
   }
 
   update() {
-    this.x = width - this.width
-    this.controlpanel.update(this.x)
-    this.graphpanel.update(this.x)
-  }
-
-  render() {
-    stroke(255)
-    fill(255)
-    rect(drawingcnv.width + 1, 0, this.width + margin, height)
-    this.renderSubs()
-  }
-
-  renderSubs() {
-    this.controlpanel.render()
-    this.graphpanel.render()
-  }
-
-  clicked() {
-    this.controlpanel.clicked()
+    if(this.theresControl) {
+      if(this.focus.ispointmass) {
+        this.interior.update()
+      }
+    }
   }
 }

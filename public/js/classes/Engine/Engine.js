@@ -4,16 +4,17 @@ class Engine {
     this.fps      = 60
     this.timestep = 0
     this.time     = 0
-    this.objectonhold = false
-    this.env_interacts = []
+    this.objectonhold  = false
+    this.env_interacts     = []
     this.dyn_objects_dis   = []
     this.still_objects_dis = []
     this.dyn_objects       = []
     this.still_objects     = []
+    this.graphs            = []
     this.running = false
     this.jointpanel = new JointPanel()
     this.lastPointMass = -1
-    this.binds()
+    this.justAdded = false
   }
 
   run() {
@@ -30,9 +31,12 @@ class Engine {
     this.dyn_objects.forEach(element => {
       element.update()
     })
+    this.graphs.forEach(element => {
+      element.update()
+    })
   }
 
-  render() {
+  renderObjects() {
     this.still_objects.forEach(element => {
       element.render()
     })
@@ -40,35 +44,60 @@ class Engine {
       element.render()
     })
   }
+  
+  renderGraphs() {
+    this.graphs.forEach(element => {
+      element.render()
+    })
+  }
 
   clicked() {
-    if(this.objectonhold) {
-      if(drawingcnv.mouseisover()) {
+    if(drawingcnv.mouseisover()) {
+      if(this.objectonhold) {
         this.dyn_objects_dis[this.dyn_objects_dis.length - 1].locate()
+        if(this.dyn_objects_dis[this.dyn_objects_dis.length - 1].located) {
+          this.orderObjects()
+          this.objectonhold = false
+          this.dyn_objects_dis[this.dyn_objects_dis.length - 1].openControl()
+        }
       } else {
-        this.dyn_objects.pop()
-        this.objectonhold = false
-      }
-      if(this.dyn_objects_dis[this.dyn_objects_dis.length - 1].located) {
-        this.orderObjects()
-        this.objectonhold = false
+        this.dyn_objects.forEach(element => {
+          if(element.mouseisover()) {
+            element.openControl()
+          }
+        })
+        this.graphs.forEach(element => {
+          if(element.mouseisover()) {
+            element.openControl()
+          }
+        })
       }
     } else {
-      this.dyn_objects.forEach(element => {
-        if(element.mouseisover()) {
-          element.remove()
-        }
-      })
+      if(this.objectonhold && !this.justAdded) {
+        this.dyn_objects_dis[this.dyn_objects_dis.length - 1].remove()
+        this.objectonhold = false
+      }
     }
+    this.justAdded = false
   }
 
   orderObjects() {
     this.dyn_objects = []
+    this.graphs = []
     this.lastPointMass = -1
+    this.dyn_objects_dis.forEach(element => {
+      if(!element.located) {
+        element.remove()
+      }
+      if(element.isgraph) {
+        this.graphs.push(element)
+      }
+    })
     this.dyn_objects_dis.forEach(element => {
       if(element.ispointmass) {
         this.dyn_objects.push(element)
         this.lastPointMass = this.lastPointMass + 1
+        element.place = this.lastPointMass + 1
       }
     })
     this.dyn_objects_dis.forEach(element => {
@@ -81,11 +110,14 @@ class Engine {
         this.dyn_objects.push(element)
       }
     })
-    // console.log(this.dyn_objects)
   }
 
-  binds() {
-    this.run = this.run.bind(this)
-    this.stop = this.stop.bind(this)
+  findById(id) {
+    this.dyn_objects.forEach(element => {
+      if(element.id == id) {
+        console.log(element)
+        return element
+      }
+    })
   }
 }

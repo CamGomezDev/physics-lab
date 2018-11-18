@@ -1,16 +1,69 @@
-<!DOCTYPE html>
-<html lang="">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Physics Lab</title>
-    <style> body {padding: 0; margin: 0;} </style>
-    <script src="lib/p5.min.js"></script>
-    <script src="lib/p5-addons/p5.dom.min.js"></script>
-    <!-- <script src="lib/p5-addons/p5.sound.min.js"></script> -->
-    <script src="lib/uuid_v4.js"></script>
-    <script src="js/min/physicslab.core.min.js"></script>
-  </head>
-  <body>
-  </body>
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Physics Lab</title>
+	<meta name="viewport" content="user-scalable=no" />
+  <link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+  <script src="lib/p5.min.js"></script>
+  <script src="lib/p5-addons/p5.dom.min.js"></script>
+  <!-- <script src="lib/p5-addons/p5.sound.min.js"></script> -->
+  <script src="lib/uuid_v4.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <!-- GUI -->
+  <div id="canvas"></div>
+  <div id="panel" style="display:inline-block">
+    <div style="width:fit-content; display:inline-block">
+      <!-- First checkbox -->
+      <div style="margin:10px;margin-bottom:0px">
+        <div class="pretty p-default p-thick">
+          <input type="checkbox" id="gravity-toggle"/>
+          <div class="state p-primary">
+            <label>Gravity</label>
+          </div>
+        </div>
+      </div>
+      <!-- Second checkbox -->
+      <div style="margin-left:10px;margin-top:5px">
+        <div class="pretty p-default p-thick">
+          <input type="checkbox" id="floor-toggle"/>
+          <div class="state p-primary">
+            <label>Floor</label>
+          </div>
+        </div>
+      </div>
+      <!-- Buttons -->
+      <div><button type="button" id="point-mass" class="btn btn-outline-primary">Mass</button></div>
+      <div><button type="button" id="spring" class="btn btn-outline-primary">Spring</button></div>
+      <div><button type="button" id="incline" class="btn btn-outline-primary">Incline</button></div>
+    </div>
+    <div style="right: 0px;display: inline-block;position: absolute;right:10px"><button type="button" id="graph" class="btn btn-outline-primary">Graph</button></div>
+    <div id="controlpanel" style="margin:10px; border: solid black 1px;padding:10px;"></div>
+    <!-- Buttons bottom -->
+    <div class="bottom" style="margin:10px;width:275px">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-primary no-outline" id="zoomin"><i class="fas fa-plus"></i></button>
+        <button type="button" class="btn btn-outline-primary no-outline" id="zoomout"><i class="fas fa-minus"></i></button>
+      </div>
+      <div class="btn-group" style="float: right;right:5px">
+        <button type="button" id="run" class="btn btn-outline-primary no-outline">
+          <i class="fas fa-play"></i>
+        </button>
+        <button type="button" id="stop" class="btn btn-outline-primary no-outline active">
+          <i class="fas fa-pause"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  <script src="js/min/physicslab.core.min.js"></script>  
+</body>
 </html>

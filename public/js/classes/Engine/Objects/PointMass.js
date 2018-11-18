@@ -2,6 +2,7 @@ class PointMass {
   constructor() {
     this.located = false
     this.ispointmass = true
+    this.place = 0
     this.id = uuidv4()
     this.side = 0.3
     this.mass = 1
@@ -12,8 +13,6 @@ class PointMass {
     this.normangle = 0
     this.acc = createVector(0,0)
     this.vel = createVector(0,0)
-    this.plane = false
-    this.justtouched = false
 
     this.remove = this.remove.bind(this)
   }
@@ -42,14 +41,14 @@ class PointMass {
         if(casey == 1) {
           let blah = element.normalPoint(this.pos.x, this.pos.y, closest_edges[0], closest_edges[1])
           let dist = blah[0]
-          this.norpt = blah[1]
+          let norpt = blah[1]
           if(dist <= this.side/2 + 1*px) {
             let rel_pos = createVector(0, this.side/2)
             rel_pos.rotate(- element.sidangle)
-            this.pos.x = rel_pos.x + this.norpt.x
-            this.pos.y = rel_pos.y + this.norpt.y
+            this.pos.x = rel_pos.x + norpt.x
+            this.pos.y = rel_pos.y + norpt.y
             if(element.normalPoint(this.prev_pos.x, this.prev_pos.y, closest_edges[0], closest_edges[1])[0] > this.side/2 + 1*px) {
-              // console.log("A block hit an incline")
+              console.log("A block hit an incline")
               let rel_vel_x = this.vel.mag()*sin(element.sidangle)
               if(this.vel.y > 0) {
                 this.vel.y = rel_vel_x*sin(element.sidangle)
@@ -70,7 +69,6 @@ class PointMass {
             this.forces.add(rel_normal.rotate(- element.sidangle))
             this.angle = element.sidangle
           }
-          this.plane = true
         }
       }
     })
@@ -105,14 +103,14 @@ class PointMass {
 
   render() {
     stroke(100)
-    if(this.plane == true) {
-      ellipse(this.norpt.x*scl, this.norpt.y*scl, 10, 10)
-    }
     push()
     translate(this.pos.x*scl, this.pos.y*scl)
-    line(0,0,this.forces.x,this.forces.y)
     rotate(- this.angle)
     rectMode(CENTER)
+    if(this.mouseisover()) {
+      stroke(color(100,100,255))
+      rect(0, 0, this.side*scl + 2, this.side*scl + 2)
+    }
     fill(color(255,150,150))
     rect(0, 0, this.side*scl, this.side*scl)
     rectMode(CORNER)
@@ -126,9 +124,14 @@ class PointMass {
     return false
   }
 
+  openControl() {
+    panel.openControl(this.id)
+  }
+
   remove() {
-    engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
+    if(this.located) {
+      engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
+    }
     engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
-    renderCanvas()
   }
 }

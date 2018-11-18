@@ -1,109 +1,141 @@
 class GraphPanel {
-  constructor(x, widthArg) {
-    this.width = widthArg - 2
-    this.height = height - panel.controlpanel.height - margin - 2
-    this.x = x
-    this.y = 0
-    this.transqueue = createVector(0,0)
-  }
+  constructor(focus) {
+    this.focus = focus
+    // Generates the group options in the left with the parameters in the right
+    this.group = [{
+      name: 'World',
+      id:'0000',
+      params: [new Param('Time', '0000', 0, this.focus)]}
+    ]
+    // Fill the group with each point mass in the engine
+    engine.dyn_objects.forEach(element => {
+      if(element.ispointmass) {
+        this.group.push({
+          name: 'Point Mass ' + element.place,
+          id: element.id,
+          params:[
+            new Param('X position', element.id, 0, this.focus),
+            new Param('Y position', element.id, 1, this.focus),
+            new Param('X velocity', element.id, 2, this.focus),
+            new Param('Y velocity', element.id, 3, this.focus),
+            new Param('X acceleration', element.id, 4, this.focus),
+            new Param('Y acceleration', element.id, 5, this.focus)]
+        })
+      }
+    })
 
-  plot() {
-    this.plt = new Plot()
-  }
-
-  update(x) {
-    this.x = x
-    this.height = height - panel.controlpanel.height - margin - 2
-    this.plt.update()
-  }
-
-  render() {
-    push()
-    translate(this.x, this.y)
-    stroke(0)
-
-    push()
-    scale(1, -1)
-    translate(- this.plt.x, - this.height - this.plt.y)
-    translate(this.transqueue.x, this.transqueue.y)
-    this.plt.x = this.plt.x - this.transqueue.x
-    this.plt.y = this.plt.y - this.transqueue.y
-    this.transqueue.x = 0
-    this.transqueue.y = 0
-
-    this.grid()
-    this.plt.render()
-    this.plt.drawAxis()
-    pop()
-
-    stroke(0)
-    fill(color(255,255,255,0))
-    rect(0, 0, this.width, this.height)
-    pop()
-  }
-
-  grid() {
-    fill(255)
-    stroke(255)
-    rect(this.plt.x + 1, this.plt.y, this.width - 2, this.height - 2)
-    
-    stroke(230)
-    let xx
-    if(this.plt.x <= 0) {
-      xx = abs(this.plt.x)%sclp
+    let panelIn
+    panelIn =  '<div style="text-align:center;font-size:16px;font-weight:700">Graph</div>'
+    panelIn += '<div>Horizontal axis:</div>'
+    panelIn += '<div class="btn-group" style="margin-bottom:10px">'
+    panelIn += '  <button id="hor-drop-obj" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
+    if(this.focus.plotSet) {
+      panelIn += this.focus.horElement.name
     } else {
-      xx = sclp - this.plt.x%sclp
+      panelIn += '  Object'
     }
-    let xy
-    if(this.plt.y <= 0) {
-      xy = abs(this.plt.y)%sclp
+    panelIn += '  </button>'
+    panelIn += '  <div class="dropdown-menu">'
+    // Horizontal left drop
+    this.group.forEach(element => {
+      panelIn += '  <a class="dropdown-item" id="' + element.id +  'hor" href="#">' + element.name + '</a>'
+    })
+    panelIn += '  </div>'        
+    panelIn += '</div>'
+    panelIn += '<div class="btn-group" style="margin-bottom:10px">'
+    panelIn += '  <button id="hor-drop-params" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
+    if(this.focus.plotSet) {
+      panelIn += this.focus.horElement.paramName
     } else {
-      xy = sclp - this.plt.y%sclp
+      panelIn += '    Parameter'
     }
+    panelIn += '  </button>'
+    // Horizontal right drop
+    panelIn += '  <div id="control-hor-params" class="dropdown-menu"></div>'
+    panelIn += '</div>'
+    panelIn += '<div>Vertical axis:</div>'
+    panelIn += '<div class="btn-group" style="margin-bottom:10px">'
+    panelIn += '  <button id="ver-drop-obj" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
+    if(this.focus.plotSet) {
+      panelIn += this.focus.verElement.name
+    } else {
+      panelIn += '  Object'
+    }
+    panelIn += '  </button>'
+    panelIn += '  <div class="dropdown-menu">'
+    // Vertical left drop
+    this.group.forEach(element => {
+      panelIn += '  <a class="dropdown-item" id="' + element.id +  'ver" href="#">' + element.name + '</a>'
+    })
+    panelIn += '  </div>'        
+    panelIn += '</div>'
+    panelIn += '<div class="btn-group" style="margin-bottom:10px">'
+    panelIn += '  <button id="ver-drop-params" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
+    if(this.focus.plotSet) {
+      panelIn += this.focus.verElement.paramName
+    } else {
+      panelIn += '  Parameter'
+    }
+    panelIn += '  </button>'
+    // Vertical right drop
+    panelIn += '  <div id="control-ver-params" class="dropdown-menu">'
+    panelIn += '  </div>'        
+    panelIn += '</div>'
 
-    let lastx = floor(this.width/sclp)
-    if(this.width - lastx*sclp < xx) {
-      lastx = lastx - 1
-    }
-    let lasty = floor(this.width/sclp)
-    if(this.width - lasty*sclp < xy) {
-      lasty = lasty - 1
-    }
+    document.getElementById("controlpanel").innerHTML = panelIn
+    this.group.forEach(element1 => {
+      let element1Id = this.group.findIndex(thing => thing == element1)
 
-    for(let i = 0; i < lastx + 1; i++) {
-      line(xx + this.plt.x + sclp*i, this.plt.y, xx + this.plt.x + sclp*i, this.plt.y + this.height - 2)
-    }
-    for(let i = 0; i < lasty + 1; i++) {
-      line(this.plt.x, xy + this.plt.y + sclp*i, this.plt.x + this.width, xy + this.plt.y + sclp*i)
-    }
+      // When clicking the horizontal left drop...
+      document.getElementById(element1.id + 'hor').onclick = () => {
+        document.getElementById("hor-drop-obj").innerHTML = element1.name
+        let params = ''
+        // Add the corresponding params to the right drop...
+        element1.params.forEach(element2 => {
+          let element2Id = this.group[element1Id].params.findIndex(thing => thing == element2)
+          // So it executes the execute function in them when clicking (which is on the Param class)
+          params += '<a class="dropdown-item" onclick="panel.interior.group[' + element1Id + '].params[' + element2Id + '].execute(1)" href="#">' + element2.name + '</a>'
+        })
+        document.getElementById("control-hor-params").innerHTML = params
+        // And fill with text 'parameter' every time a left selection changes
+        document.getElementById("hor-drop-params").innerHTML = "Parameter"
+      }
+
+      // When clicking the vertical left drop...
+      document.getElementById(element1.id + 'ver').onclick = () => {
+        document.getElementById("ver-drop-obj").innerHTML = element1.name
+        let params = ''
+        // Add the corresponding params to the right drop...
+        element1.params.forEach(element2 => {
+          let element2Id = this.group[element1Id].params.findIndex(thing => thing == element2)
+          // So it executes the execute function in them when clicking (which is on the Param class)
+          params += '<a class="dropdown-item" onclick="panel.interior.group[' + element1Id + '].params[' + element2Id + '].execute(2)" href="#">' + element2.name + '</a>'
+        })
+        document.getElementById("control-ver-params").innerHTML = params
+        // And fill with text 'parameter' every time a left selection changes
+        document.getElementById("ver-drop-params").innerHTML = "Parameter"
+      }
+    })
   }
+}
 
-  pressed() {
-    if(this.mouseisover()) {
-      this.mousepressed = true
-      this.prevmouse = createVector(mouseX, mouseY)
-    }
+
+
+class Param {
+  constructor(name, parentId, index, focus) {
+    this.focus = focus
+    this.index = index
+    this.parentId = parentId
+    this.name = name
+    this.execute = this.execute.bind(this)
   }
-
-  dragged() {
-    if(this.mouseisover() && this.mousepressed) {
-      this.transqueue.x = mouseX - this.prevmouse.x
-      this.transqueue.y = this.prevmouse.y - mouseY
-      this.prevmouse.x = mouseX
-      this.prevmouse.y = mouseY
+  execute(axis) {
+    if(axis == 1) {
+      document.getElementById("hor-drop-params").innerHTML = this.name
+      this.focus.setParamsForPlot(axis, this.parentId, this.index)
+    } else if(axis == 2) {
+      document.getElementById("ver-drop-params").innerHTML = this.name
+      this.focus.setParamsForPlot(axis, this.parentId, this.index)
     }
-  }
-
-  released() {
-    if(this.mousepressed) {
-      this.mousepressed = false
-    }
-  }
-
-  mouseisover() {
-    if(mouseX > this.x && mouseX < this.x + this.width && mouseY > 0 && mouseY < this.height) {
-      return true
-    }
-    return false
   }
 }

@@ -1,3 +1,7 @@
+// Init GUI Components
+let canvasDiv = document.getElementById("canvas")
+let panelDiv  = document.getElementById("panel")
+
 let scl = 100, sclp = 60, margin = 8, tot_margin = 2*margin
 let cnv, panel, drawingcnv, engine
 let rmouseX, rmouseY, px
@@ -5,65 +9,71 @@ let running = false
 
 function setup() {
   engine = new Engine()
-  cnv = createCanvas(windowWidth - tot_margin, windowHeight - tot_margin)
-  centerCanvas()
   panel = new Panel()
-  panel.subs()
-  drawingcnv = new DrawingCanvas(width - panel.width - margin)
-  panel.controlpanel.interactions()
+  setFillerCanvas()
+  cnv = createCanvas(windowWidth - panel.width - margin*3, windowHeight - tot_margin)
+  centerCanvas()
+  drawingcnv = new DrawingCanvas(width)
+  drawingcnv.update()
+  drawingcnv.grid()
 }
-var lastLoop = new Date();
 
-//FPS stuff
-let lastDate = new Date()
-let texti
 let i = 0
-//there
+let fpsText
 function draw() {
+  background(255)
   push()
   rmouseX = (mouseX + drawingcnv.x)/scl
   rmouseY = (height - mouseY + drawingcnv.y)/scl
   frameRate(engine.fps)
   drawingcnv.update()
-  drawingcnv.grid()
   if(engine.running) {
     engine.update()
   }
-  engine.render()
-  drawingcnv.late()
+  engine.renderObjects()
+  drawingcnv.grid()
+  drawingcnv.drawAxis()
   pop()
+  engine.renderGraphs()
+  drawingcnv.frame()
   panel.update()
-  panel.render()
-
   //FPS stuff
-  let currentDate = new Date()
   i = i + 1
-  if(i%30 == 0) {
-    texti = "FPS = " +  (1000/(currentDate - lastDate)).toFixed(2)
+  if(i%20 == 0) {
+    fpsText = "FPS = " + frameRate().toFixed(2)
   }
-  lastDate = currentDate
+  textAlign(LEFT, LEFT)
   fill(color(150,150,0))
   textSize(18)
-  text(texti, drawingcnv.width - 120, 20)
+  text(fpsText, drawingcnv.width - 100, 20)
   //there
 }
 
-function renderCanvas() {
-  drawingcnv.grid()
-  engine.render()
-  drawingcnv.late()
-}
+// function renderCanvas() {
+//   drawingcnv.grid()
+//   engine.renderObjects()
+//   drawingcnv.late()
+// }
 
-// Filler functions
+
 function windowResized() {
-  resizeCanvas(windowWidth - tot_margin, windowHeight - tot_margin);
-  drawingcnv.width = width - panel.width - margin
+  setFillerCanvas()
+  resizeCanvas(windowWidth - panel.width - margin*3, windowHeight - tot_margin);
+  drawingcnv.width = width
   centerCanvas()
   background(255)
-  panel.update()
+  // panel.update()
 }
+
+function setFillerCanvas() {
+  canvasDiv.width = windowWidth - panel.width - margin*3;
+  canvasDiv.height = windowHeight - tot_margin;
+  panelDiv.setAttribute("style", "height:" + canvasDiv.height + "px");
+  canvasDiv.setAttribute("style", "background:blue")
+}
+
 function centerCanvas() {
-  var x = (windowWidth - width)/2;
-  var y = (windowHeight - height)/2;
-  cnv.position(x, y);
+  let x = floor((windowWidth - panel.width - margin - width)/2)
+  let y = floor((windowHeight - height)/2)
+  cnv.position(x, y)
 }
