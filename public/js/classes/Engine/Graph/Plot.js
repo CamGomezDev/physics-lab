@@ -2,7 +2,9 @@ class Plot {
   constructor(width, height) {
     this.width = width
     this.height = height
-    this.cam = createVector(- sclp, - floor(height/2))
+    this.horscl = 60
+    this.verscl = 60
+    this.cam = createVector(- this.horscl, - floor(height/2))
     this.transqueue = createVector(0,0)
     this.x_arr = []
     this.y_arr = []
@@ -48,23 +50,23 @@ class Plot {
   grid() {
     let xx
     if(this.cam.x <= 0) {
-      xx = abs(this.cam.x)%sclp
+      xx = abs(this.cam.x)%this.horscl
     } else {
-      xx = sclp - this.cam.x%sclp
+      xx = this.horscl - this.cam.x%this.horscl
     }
     let xy
     if(this.cam.y <= 0) {
-      xy = abs(this.cam.y)%sclp
+      xy = abs(this.cam.y)%this.verscl
     } else {
-      xy = sclp - this.cam.y%sclp
+      xy = this.verscl - this.cam.y%this.verscl
     }
 
-    let lastX = floor(this.width/sclp)
-    if(this.width - lastX*sclp < xx) {
+    let lastX = floor(this.width/this.horscl)
+    if(this.width - lastX*this.horscl < xx) {
       lastX = lastX - 1
     }
-    let lastY = floor(this.height/sclp)
-    if(this.height - lastY*sclp < xy) {
+    let lastY = floor(this.height/this.verscl)
+    if(this.height - lastY*this.verscl < xy) {
       lastY = lastY - 1
     }
 
@@ -74,34 +76,34 @@ class Plot {
     fill(0)
     textSize(12)
     for(let i = 0; i < lastX + 1; i++) {
-      line(xx + this.cam.x + sclp*i, this.cam.y, xx + this.cam.x + sclp*i, this.cam.y + this.height)
-      if(abs(xx + this.cam.x + sclp*i) > 1) {
+      line(xx + this.cam.x + this.horscl*i, this.cam.y, xx + this.cam.x + this.horscl*i, this.cam.y + this.height)
+      if(abs(xx + this.cam.x + this.horscl*i) > 1) {
         push()
         if(this.cam.y > -18) {
-          translate(xx + this.cam.x + sclp*i, this.cam.y + 20)
+          translate(xx + this.cam.x + this.horscl*i, this.cam.y + 20)
         } else if (this.cam.y < -this.height) {
-          translate(xx + this.cam.x + sclp*i, this.cam.y + this.height)
+          translate(xx + this.cam.x + this.horscl*i, this.cam.y + this.height)
         } else {
-          translate(xx + this.cam.x + sclp*i, 0)
+          translate(xx + this.cam.x + this.horscl*i, 0)
         }
         scale(1, -1)
-        text((xx + this.cam.x + sclp*i)/sclp, 0, 10)
+        text(((xx + this.cam.x + this.horscl*i)/this.horscl).toFixed(0), 0, 10)
         pop()
       } 
     }
     for(let i = 0; i < lastY + 1; i++) {
-      line(this.cam.x, xy + this.cam.y + sclp*i, this.cam.x + this.width, xy + this.cam.y + sclp*i)
+      line(this.cam.x, xy + this.cam.y + this.verscl*i, this.cam.x + this.width, xy + this.cam.y + this.verscl*i)
       push()
       if(this.cam.x > -22) {
-        translate(this.cam.x + 22, xy + this.cam.y + sclp*i)
+        translate(this.cam.x + 22, xy + this.cam.y + this.verscl*i)
       } else if (this.cam.x < -this.width) {
-        translate(this.cam.x + this.width, xy + this.cam.y + sclp*i)
+        translate(this.cam.x + this.width, xy + this.cam.y + this.verscl*i)
       } else {
-        translate(0, xy + this.cam.y + sclp*i)
+        translate(0, xy + this.cam.y + this.verscl*i)
       }
       scale(1, -1)
-      if(abs(xy + this.cam.y + sclp*i) > 1) {
-        text((xy + this.cam.y + sclp*i)/sclp, -10, 0)
+      if(abs(xy + this.cam.y + this.verscl*i) > 1) {
+        text(((xy + this.cam.y + this.verscl*i)/this.verscl).toFixed(0), -10, 0)
       }
       pop()
     }
@@ -122,16 +124,16 @@ class Plot {
     let lastOnGrid = false
     let shapeBegun = false
     for(let i = 0; i < this.x_arr.length; i++) {
-      if(this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) && this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) != lastOnGrid) {
+      if(this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) && this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) != lastOnGrid) {
         beginShape()
-        vertex(this.x_arr[i]*sclp, this.y_arr[i]*sclp)
+        vertex(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl)
         shapeBegun = true
         lastOnGrid = true
-      } else if(this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) && lastOnGrid) {
-        vertex(this.x_arr[i]*sclp, this.y_arr[i]*sclp)
+      } else if(this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) && lastOnGrid) {
+        vertex(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl)
         lastOnGrid = true
-      } else if(!this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) && lastOnGrid) {
-        vertex(this.x_arr[i]*sclp, this.y_arr[i]*sclp)
+      } else if(!this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) && lastOnGrid) {
+        vertex(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl)
         endShape()
         lastOnGrid = false
         shapeBegun = false

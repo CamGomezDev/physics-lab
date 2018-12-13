@@ -120,8 +120,8 @@ class Graph {
         }
       }
 
-      this.plot.cam.x = this.plot.x_arr[this.plot.x_arr.length - 1]*sclp - this.plot.width/2
-      this.plot.cam.y = this.plot.y_arr[this.plot.y_arr.length - 1]*sclp - this.plot.height/2
+      this.plot.cam.x = this.plot.x_arr[this.plot.x_arr.length - 1]*this.plot.horscl - this.plot.width/2
+      this.plot.cam.y = this.plot.y_arr[this.plot.y_arr.length - 1]*this.plot.verscl - this.plot.height/2
     }
   }
   
@@ -195,5 +195,12 @@ class Graph {
       return true
     }
     return false
+  }
+
+  remove() {
+    if(this.located) {
+      engine.graphs.splice(engine.graphs.indexOf(this), 1)
+    }
+    engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
   }
 }

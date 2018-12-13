@@ -2,8 +2,8 @@ class Panel {
   constructor() {
     this.width = 300
     this.theresControl = false
-    this.controlFocusId
     this.focus
+    this.indexPanel = new IndexPanel()
 
     document.getElementById("floor-toggle").onchange = function() {
       if(this.checked) {
@@ -62,29 +62,49 @@ class Panel {
 
   openControl(id) {
     this.theresControl = true
-    this.controlFocusId = id
+    engine.still_objects.forEach(element => {
+      if(element.id == id) {
+        this.focus = element
+      }
+    })
     engine.dyn_objects.forEach(element => {
-      if(element.id == this.controlFocusId) {
+      if(element.id == id) {
         this.focus = element
       }
     })
     engine.graphs.forEach(element => {
-      if(element.id == this.controlFocusId) {
+      if(element.id == id) {
         this.focus = element
       }
     })
-    if(this.focus.ispointmass) {
-      this.interior = new PointMassPanel(this.focus)
+    if(this.focus.isgravity) {
+      this.controlPanel = new GravityPanel(this.focus)
+    } else if(this.focus.isfloor) {
+      this.controlPanel = new FloorPanel(this.focus)
+    } else if(this.focus.ispointmass) {
+      this.controlPanel = new PointMassPanel(this.focus)
+    } else if(this.focus.isincline) {
+      this.controlPanel = new InclinePanel(this.focus)
+    } else if(this.focus.isspring) {
+      this.controlPanel = new SpringPanel(this.focus)
     } else if(this.focus.isgraph) {
-      this.interior = new GraphPanel(this.focus)
+      this.controlPanel = new GraphPanel(this.focus)
     }
+
+    document.getElementById("controlremove").onclick = function() {
+      panel.focus.remove()
+      document.getElementById("controlpanel").innerHTML = ''
+      panel.theresControl = false
+      panel.indexPanel.update()
+    }
+
+    // thes her' logic goes t' keep tha indexpanel heigh' stady
+    document.getElementById("indexpanel").style.maxHeight = (height - document.getElementById("top-buttons").offsetHeight - document.getElementById("bottom").offsetHeight -  document.getElementById("controlpanel").offsetHeight - 30) + "px"
   }
 
   update() {
-    if(this.theresControl) {
-      if(this.focus.ispointmass) {
-        this.interior.update()
-      }
+    if(this.theresControl && !this.focus.isgraph) {
+      this.controlPanel.update()
     }
   }
 }

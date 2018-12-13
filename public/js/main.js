@@ -13,7 +13,7 @@ function setup() {
   setFillerCanvas()
   cnv = createCanvas(windowWidth - panel.width - margin*3, windowHeight - tot_margin)
   centerCanvas()
-  drawingcnv = new DrawingCanvas(width)
+  drawingcnv = new DrawingCanvas()
   drawingcnv.update()
   drawingcnv.grid()
 }
@@ -45,7 +45,7 @@ function draw() {
   textAlign(LEFT, LEFT)
   fill(color(150,150,0))
   textSize(18)
-  text(fpsText, drawingcnv.width - 100, 20)
+  text(fpsText, width - 100, 20)
   //there
 }
 

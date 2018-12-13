@@ -1,8 +1,7 @@
 class DrawingCanvas {
-  constructor(widthArg) {
+  constructor() {
     this.x = - 1*scl
     this.y = - 2*scl
-    this.width = widthArg
     this.transqueue = createVector(0,0)
     this.zoom = 1
     this.grid()
@@ -23,13 +22,19 @@ class DrawingCanvas {
   }
 
   zoomin() {
+    let center = createVector((this.x + width/2)/scl, (this.y + height/2)/scl)
     scl = 1.2*scl
     px = 1/scl
+    this.x = (center.x*scl - width/2)
+    this.y = (center.y*scl - height/2)
   }
 
   zoomout() {
+    let center = createVector((this.x + width/2)/scl, (this.y + height/2)/scl)
     scl = 0.8*scl
     px = 1/scl
+    this.x = (center.x*scl - width/2)
+    this.y = (center.y*scl - height/2)
   }
 
   // render() {
@@ -73,8 +78,8 @@ class DrawingCanvas {
       xy = scl - this.y%scl
     }
 
-    let lastx = floor(this.width/scl)
-    if(this.width - lastx*scl < xx) {
+    let lastx = floor(width/scl)
+    if(width - lastx*scl < xx) {
       lastx = lastx - 1
     }
     let lasty = floor(height/scl)
@@ -103,7 +108,7 @@ class DrawingCanvas {
       }
     }
     for(let i = 0; i < lasty + 1; i++) {
-      line(this.x, xy + this.y + scl*i, this.x + this.width, xy + this.y + scl*i)
+      line(this.x, xy + this.y + scl*i, this.x + width, xy + this.y + scl*i)
       push()
       if(this.x > -22) {
         translate(this.x + 22, xy + this.y + scl*i)
@@ -138,7 +143,7 @@ class DrawingCanvas {
   }
 
   mouseisover() {
-    if(mouseX > 0 && mouseX < this.width && mouseY > 0 && mouseY < height) {
+    if(mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
       return true
     }
     return false

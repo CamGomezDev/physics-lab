@@ -1,117 +1,3 @@
-class Engine {
-  constructor() {
-    this.unit     = 20 //pixels per unit (unit may be meter, cm, etc)
-    this.fps      = 60
-    this.timestep = 0
-    this.time     = 0
-    this.objectonhold  = false
-    this.env_interacts     = []
-    this.dyn_objects_dis   = []
-    this.still_objects_dis = []
-    this.dyn_objects       = []
-    this.still_objects     = []
-    this.graphs            = []
-    this.running = false
-    this.jointpanel = new JointPanel()
-    this.lastPointMass = -1
-    this.justAdded = false
-  }
-
-  run() {
-    this.running = true
-    this.timestep = 1/this.fps
-  }
-
-  stop() {
-    this.running = false
-  }
-
-  update() {
-    this.time = this.time + this.timestep
-    this.dyn_objects.forEach(element => {
-      element.update()
-    })
-    this.graphs.forEach(element => {
-      element.update()
-    })
-  }
-
-  renderObjects() {
-    this.still_objects.forEach(element => {
-      element.render()
-    })
-    this.dyn_objects.forEach(element => {
-      element.render()
-    })
-  }
-  
-  renderGraphs() {
-    this.graphs.forEach(element => {
-      element.render()
-    })
-  }
-
-  clicked() {
-    if(drawingcnv.mouseisover()) {
-      if(this.objectonhold) {
-        this.dyn_objects_dis[this.dyn_objects_dis.length - 1].locate()
-        if(this.dyn_objects_dis[this.dyn_objects_dis.length - 1].located) {
-          this.orderObjects()
-          this.objectonhold = false
-          this.dyn_objects_dis[this.dyn_objects_dis.length - 1].openControl()
-        }
-      } else {
-        this.dyn_objects.forEach(element => {
-          if(element.mouseisover()) {
-            element.openControl()
-          }
-        })
-        this.graphs.forEach(element => {
-          if(element.mouseisover()) {
-            element.openControl()
-          }
-        })
-      }
-    } else {
-      if(this.objectonhold && !this.justAdded) {
-        this.dyn_objects_dis[this.dyn_objects_dis.length - 1].remove()
-        this.objectonhold = false
-      }
-    }
-    this.justAdded = false
-  }
-
-  orderObjects() {
-    this.dyn_objects = []
-    this.graphs = []
-    this.lastPointMass = -1
-    this.dyn_objects_dis.forEach(element => {
-      if(!element.located) {
-        element.remove()
-      }
-      if(element.isgraph) {
-        this.graphs.push(element)
-      }
-    })
-    this.dyn_objects_dis.forEach(element => {
-      if(element.ispointmass) {
-        this.dyn_objects.push(element)
-        this.lastPointMass = this.lastPointMass + 1
-        element.place = this.lastPointMass + 1
-      }
-    })
-    this.dyn_objects_dis.forEach(element => {
-      if(element.isspring) {
-        this.dyn_objects.push(element)
-      }
-    })
-    this.dyn_objects_dis.forEach(element => {
-      if(element.isincline) {
-        this.dyn_objects.push(element)
-      }
-    })
-  }
-}
 class Graph {
   constructor() {
     this.id = uuidv4()
@@ -234,8 +120,8 @@ class Graph {
         }
       }
 
-      this.plot.cam.x = this.plot.x_arr[this.plot.x_arr.length - 1]*sclp - this.plot.width/2
-      this.plot.cam.y = this.plot.y_arr[this.plot.y_arr.length - 1]*sclp - this.plot.height/2
+      this.plot.cam.x = this.plot.x_arr[this.plot.x_arr.length - 1]*this.plot.horscl - this.plot.width/2
+      this.plot.cam.y = this.plot.y_arr[this.plot.y_arr.length - 1]*this.plot.verscl - this.plot.height/2
     }
   }
   
@@ -310,12 +196,21 @@ class Graph {
     }
     return false
   }
+
+  remove() {
+    if(this.located) {
+      engine.graphs.splice(engine.graphs.indexOf(this), 1)
+    }
+    engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
+  }
 }
 class Plot {
   constructor(width, height) {
     this.width = width
     this.height = height
-    this.cam = createVector(- sclp, - floor(height/2))
+    this.horscl = 60
+    this.verscl = 60
+    this.cam = createVector(- this.horscl, - floor(height/2))
     this.transqueue = createVector(0,0)
     this.x_arr = []
     this.y_arr = []
@@ -361,23 +256,23 @@ class Plot {
   grid() {
     let xx
     if(this.cam.x <= 0) {
-      xx = abs(this.cam.x)%sclp
+      xx = abs(this.cam.x)%this.horscl
     } else {
-      xx = sclp - this.cam.x%sclp
+      xx = this.horscl - this.cam.x%this.horscl
     }
     let xy
     if(this.cam.y <= 0) {
-      xy = abs(this.cam.y)%sclp
+      xy = abs(this.cam.y)%this.verscl
     } else {
-      xy = sclp - this.cam.y%sclp
+      xy = this.verscl - this.cam.y%this.verscl
     }
 
-    let lastX = floor(this.width/sclp)
-    if(this.width - lastX*sclp < xx) {
+    let lastX = floor(this.width/this.horscl)
+    if(this.width - lastX*this.horscl < xx) {
       lastX = lastX - 1
     }
-    let lastY = floor(this.height/sclp)
-    if(this.height - lastY*sclp < xy) {
+    let lastY = floor(this.height/this.verscl)
+    if(this.height - lastY*this.verscl < xy) {
       lastY = lastY - 1
     }
 
@@ -387,34 +282,34 @@ class Plot {
     fill(0)
     textSize(12)
     for(let i = 0; i < lastX + 1; i++) {
-      line(xx + this.cam.x + sclp*i, this.cam.y, xx + this.cam.x + sclp*i, this.cam.y + this.height)
-      if(abs(xx + this.cam.x + sclp*i) > 1) {
+      line(xx + this.cam.x + this.horscl*i, this.cam.y, xx + this.cam.x + this.horscl*i, this.cam.y + this.height)
+      if(abs(xx + this.cam.x + this.horscl*i) > 1) {
         push()
         if(this.cam.y > -18) {
-          translate(xx + this.cam.x + sclp*i, this.cam.y + 20)
+          translate(xx + this.cam.x + this.horscl*i, this.cam.y + 20)
         } else if (this.cam.y < -this.height) {
-          translate(xx + this.cam.x + sclp*i, this.cam.y + this.height)
+          translate(xx + this.cam.x + this.horscl*i, this.cam.y + this.height)
         } else {
-          translate(xx + this.cam.x + sclp*i, 0)
+          translate(xx + this.cam.x + this.horscl*i, 0)
         }
         scale(1, -1)
-        text((xx + this.cam.x + sclp*i)/sclp, 0, 10)
+        text(((xx + this.cam.x + this.horscl*i)/this.horscl).toFixed(0), 0, 10)
         pop()
       } 
     }
     for(let i = 0; i < lastY + 1; i++) {
-      line(this.cam.x, xy + this.cam.y + sclp*i, this.cam.x + this.width, xy + this.cam.y + sclp*i)
+      line(this.cam.x, xy + this.cam.y + this.verscl*i, this.cam.x + this.width, xy + this.cam.y + this.verscl*i)
       push()
       if(this.cam.x > -22) {
-        translate(this.cam.x + 22, xy + this.cam.y + sclp*i)
+        translate(this.cam.x + 22, xy + this.cam.y + this.verscl*i)
       } else if (this.cam.x < -this.width) {
-        translate(this.cam.x + this.width, xy + this.cam.y + sclp*i)
+        translate(this.cam.x + this.width, xy + this.cam.y + this.verscl*i)
       } else {
-        translate(0, xy + this.cam.y + sclp*i)
+        translate(0, xy + this.cam.y + this.verscl*i)
       }
       scale(1, -1)
-      if(abs(xy + this.cam.y + sclp*i) > 1) {
-        text((xy + this.cam.y + sclp*i)/sclp, -10, 0)
+      if(abs(xy + this.cam.y + this.verscl*i) > 1) {
+        text(((xy + this.cam.y + this.verscl*i)/this.verscl).toFixed(0), -10, 0)
       }
       pop()
     }
@@ -435,16 +330,16 @@ class Plot {
     let lastOnGrid = false
     let shapeBegun = false
     for(let i = 0; i < this.x_arr.length; i++) {
-      if(this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) && this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) != lastOnGrid) {
+      if(this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) && this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) != lastOnGrid) {
         beginShape()
-        vertex(this.x_arr[i]*sclp, this.y_arr[i]*sclp)
+        vertex(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl)
         shapeBegun = true
         lastOnGrid = true
-      } else if(this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) && lastOnGrid) {
-        vertex(this.x_arr[i]*sclp, this.y_arr[i]*sclp)
+      } else if(this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) && lastOnGrid) {
+        vertex(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl)
         lastOnGrid = true
-      } else if(!this.isOnGrid(this.x_arr[i]*sclp, this.y_arr[i]*sclp) && lastOnGrid) {
-        vertex(this.x_arr[i]*sclp, this.y_arr[i]*sclp)
+      } else if(!this.isOnGrid(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl) && lastOnGrid) {
+        vertex(this.x_arr[i]*this.horscl, this.y_arr[i]*this.verscl)
         endShape()
         lastOnGrid = false
         shapeBegun = false
@@ -466,33 +361,38 @@ class Plot {
 }
 class Floor {
   constructor() {
+    this.id = uuidv4()
     this.y = 0
-    this.render()
+    this.isfloor = true
+    this.frictionOn = true
+    this.statcoeff = 0
+    this.kincoeff = 0
   }
 
   render() {
     stroke(100)
     fill(200)
-    rect(drawingcnv.x, drawingcnv.y, drawingcnv.width, this.y - drawingcnv.y)
+    rect(drawingcnv.x, drawingcnv.y, width, this.y - drawingcnv.y)
   }
 
   mouseisover() {
     return false
   }
-
-  remove() {
-    engine.still_objects.splice(engine.still_objects.indexOf(this), 1)
-  }
 }
 class Incline {
   constructor() {
     this.id = uuidv4()
+    this.place = 0
     this.located = false
-    this.height = 1.5
     this.width = 3
+    this.height = 1.5
     this.sidangle = atan(this.height/this.width) // radians
     this.mass = 2
     this.isincline = true
+    this.isellastic = false
+    this.frictionOn = true
+    this.statcoeff = 0.3
+    this.kincoeff = 0.3
     this.pos = createVector(0,0)
     this.vel = createVector(0,0)
     this.acc = createVector(0,0)
@@ -517,18 +417,23 @@ class Incline {
     this.botedge.y = this.pos.y - this.height/2
     this.sidedge.x = this.pos.x + this.width/2
     this.sidedge.y = this.pos.y - this.height/2
+    this.sidangle = atan(this.height/this.width) // radians
   }
 
   checkForces() {
-    engine.env_interacts.forEach(element => {
-      this.forces.y += this.mass*element.vector.y
+    engine.still_objects.forEach(element => {
+      if(element.isgravity) {
+        this.forces.y += this.mass*element.vector.y
+      }
     })
     engine.still_objects.forEach(element => {
-      if(this.pos.y - this.height/2 <= element.y + px) {
-        this.pos.y = element.y + this.height/2 + px
-        this.vel.y = 0
-        if(this.forces.y <= 0) {
-          this.forces.y = 0
+      if(element.isfloor) {
+        if(this.pos.y - this.height/2 <= element.y + px) {
+          this.pos.y = element.y + this.height/2 + px
+          this.vel.y = 0
+          if(this.forces.y <= 0) {
+            this.forces.y = 0
+          }
         }
       }
     })
@@ -544,10 +449,18 @@ class Incline {
     this.updateEdges()
   }
   
-  render() {
+  render(panelHighlight=false) {
+    this.mouseOrIndexHighlight = false
+    if(this.indexHighlightLoad || this.mouseisover()) {
+      this.mouseOrIndexHighlight = true
+    }
     stroke(100)
     fill(color(130, 200, 130))
     triangle(this.topedge.x*scl, this.topedge.y*scl, this.botedge.x*scl, this.botedge.y*scl, this.sidedge.x*scl, this.sidedge.y*scl)
+    if(this.mouseOrIndexHighlight || panelHighlight) {
+      stroke(color(100,100,255))
+      triangle(this.topedge.x*scl - 2, this.topedge.y*scl + 2, this.botedge.x*scl - 2, this.botedge.y*scl - 2, this.sidedge.x*scl + 2, this.sidedge.y*scl - 2)
+    }
   }
 
   closestEdges(x, y) {
@@ -575,93 +488,176 @@ class Incline {
   }
 
   openControl() {
-    PerformanceObserverEntryList
+    panel.openControl(this.id)
   }
 
   mouseisover() {
+    if(rmouseX > this.botedge.x && rmouseX < this.sidedge.x && rmouseY > this.botedge.y) {
+      let p1 = this.topedge
+      let p2 = this.sidedge
+      let m = (p2.y - p1.y)/(p2.x - p1.x)
+      let b = p1.y - m*p1.x
+      let topY = m*rmouseX + b
+      if(rmouseY < topY) {
+        return true
+      }
+    }
     return false
+  }
+
+  remove() {
+    if(this.located) {
+      engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
+    }
+    engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
+    engine.renderOrder.splice(engine.renderOrder.indexOf(this), 1)
   }
 }
 class PointMass {
   constructor() {
     this.located = false
     this.ispointmass = true
+    this.draggingVel = false
     this.place = 0
     this.id = uuidv4()
     this.side = 0.3
     this.mass = 1
     this.pos = createVector(0,0)
-    this.prev_pos = createVector(0,0)
+    this.prevPos = createVector(0,0)
     this.forces = createVector(0,0)
     this.normal = createVector(0,0)
     this.normangle = 0
     this.acc = createVector(0,0)
     this.vel = createVector(0,0)
+    this.Ek = 0
 
     this.remove = this.remove.bind(this)
   }
 
   checkForces() {
-    engine.env_interacts.forEach(element => {
-      this.forces.y += this.mass*element.vector.y
+    engine.still_objects.forEach(element => {
+      if(element.isgravity) {
+        this.forces.add(p5.Vector.mult(element.vector, this.mass))
+      }
     })
     engine.dyn_objects.forEach(element => {
       if(element.isspring) {
         if(element.end1.objid == this.id || element.end2.objid == this.id) {
-          let spring_force
+          let springForce
           if(element.end1.objid == this.id) {
-            spring_force = p5.Vector.sub(element.end2.pos, element.end1.pos).normalize()
+            springForce = p5.Vector.sub(element.end2.pos, element.end1.pos).normalize()
           } else {
-            spring_force = p5.Vector.sub(element.end1.pos, element.end2.pos).normalize()
+            springForce = p5.Vector.sub(element.end1.pos, element.end2.pos).normalize()
           }
-          spring_force.mult(element.elong)
-          spring_force.mult(element.k)
-          this.forces.add(spring_force)
+          springForce.mult(element.elong)
+          springForce.mult(element.k)
+          this.forces.add(springForce)
         }
       }
       if(element.isincline) {
-        let closest_edges = element.closestEdges(this.pos.x, this.pos.y)
-        let casey = closest_edges[2]
+        let closestEdges = element.closestEdges(this.pos.x, this.pos.y)
+        let casey = closestEdges[2]
         if(casey == 1) {
-          let blah = element.normalPoint(this.pos.x, this.pos.y, closest_edges[0], closest_edges[1])
+          let blah = element.normalPoint(this.pos.x, this.pos.y, closestEdges[0], closestEdges[1])
           let dist = blah[0]
           let norpt = blah[1]
           if(dist <= this.side/2 + 1*px) {
-            let rel_pos = createVector(0, this.side/2)
-            rel_pos.rotate(- element.sidangle)
-            this.pos.x = rel_pos.x + norpt.x
-            this.pos.y = rel_pos.y + norpt.y
-            if(element.normalPoint(this.prev_pos.x, this.prev_pos.y, closest_edges[0], closest_edges[1])[0] > this.side/2 + 1*px) {
+            let relPos = createVector(0, this.side/2)
+            relPos.rotate(- element.sidangle)
+            this.pos.x = relPos.x + norpt.x
+            this.pos.y = relPos.y + norpt.y
+            if(element.normalPoint(this.prevPos.x, this.prevPos.y, closestEdges[0], closestEdges[1])[0] > this.side/2 + 1*px) {
+              let unitTang = createVector(1,0).rotate(- element.sidangle)
               console.log("A block hit an incline")
-              let rel_vel_x = this.vel.mag()*sin(element.sidangle)
-              if(this.vel.y > 0) {
-                this.vel.y = rel_vel_x*sin(element.sidangle)
+              let tangVel = p5.Vector.mult(unitTang.copy(), p5.Vector.dot(this.vel, unitTang))
+              this.vel = tangVel
+            }
+            let relNormal = createVector(0,0)
+            let forceInNor = this.forces.y*cos(element.sidangle) + this.forces.x*sin(element.sidangle)
+            if(forceInNor < 0) {
+              relNormal.y = - forceInNor
+            }
+            relNormal.rotate(- element.sidangle)
+            let normal = relNormal
+            // Friction calculations for incline
+            if(element.frictionOn) {
+              let normalMag = relNormal.mag()
+              let unitTang = normal.copy()
+              unitTang.rotate(- radians(90)).normalize()
+              let tangVelMag = p5.Vector.dot(this.vel, unitTang)
+              if(abs(tangVelMag) > 0.01) {
+                // Object moving, kinetic friction
+                let kinFricForce = unitTang.copy()
+                if(tangVelMag > 0) {
+                  kinFricForce.mult(- normalMag*element.kincoeff)
+                } else {
+                  kinFricForce.mult(normalMag*element.kincoeff)
+                }
+                if(abs(tangVelMag) < 0.1 && element.kincoeff != 0) {
+                  this.vel.x = 0
+                } else {
+                  this.forces.add(kinFricForce)
+                }
               } else {
-                this.vel.y = - rel_vel_x*sin(element.sidangle)
-              }
-              if(this.vel.x >= 0) {
-                this.vel.x = rel_vel_x*cos(element.sidangle)
-              } else {
-                this.vel.x = - rel_vel_x*cos(element.sidangle)
+                // Object not moving, static friction
+                let maxStatFric = normalMag*element.statcoeff
+                let tangForceMag = p5.Vector.dot(this.forces, unitTang)
+                let statFricForce = unitTang.copy()
+                if(abs(tangForceMag) > maxStatFric) {
+                  statFricForce.mult(- maxStatFric)
+                } else {
+                  statFricForce.mult(- tangForceMag)
+                }
+                this.forces.add(statFricForce)
               }
             }
-            let rel_normal = createVector(0,0)
-            let force_in_nor = this.forces.y*cos(element.sidangle) + this.forces.x*sin(element.sidangle)
-            if(force_in_nor < 0) {
-              rel_normal.y = - force_in_nor
-            }
-            this.forces.add(rel_normal.rotate(- element.sidangle))
+            this.forces.add(normal)
             this.angle = element.sidangle
           }
         }
       }
     })
     engine.still_objects.forEach(element => {
-      if(this.pos.y - this.side/2 <= element.y) {
-        this.pos.y = element.y + this.side/2
-        this.vel.y = 0
-        if(this.forces.y <= 0) {
-          this.forces.y = 0
+      if(element.isfloor) {
+        if(this.pos.y - this.side/2 <= element.y) {
+          this.pos.y = element.y + this.side/2
+          if(this.vel.y < 0) {
+            this.vel.y = 0
+          }
+  
+          if(element.frictionOn && this.forces.y < 0) {
+            let normalMag = - this.forces.y
+            let tangVelMag = this.vel.x
+            if(abs(tangVelMag) > 0) {
+              // Object moving, kinetic friction
+              let kinFricForce = createVector(1,0)
+              if(tangVelMag > 0) {
+                kinFricForce.mult(- normalMag*element.kincoeff)
+              } else {
+                kinFricForce.mult(normalMag*element.kincoeff)
+              }
+              if(abs(tangVelMag) < 0.1) {
+                this.vel.x = 0
+              } else {
+                this.forces.add(kinFricForce)
+              }
+            } else {
+              // Object not moving, static friction
+              let maxStatFric = normalMag*element.statcoeff
+              let tangForceMag = this.forces.x
+              let statFricForce = createVector(1,0)
+              if(abs(tangForceMag) > maxStatFric) {
+                statFricForce.mult(- maxStatFric*tangForceMag/abs(tangForceMag))
+              } else {
+                statFricForce.mult(- tangForceMag)
+              }
+              this.forces.add(statFricForce)
+            }
+          }
+  
+          if(this.forces.y <= 0) {
+            this.forces.y = 0
+          }
         }
       }
     })
@@ -681,24 +677,61 @@ class PointMass {
     this.checkForces()
     this.acc = p5.Vector.div(this.forces, this.mass)
     this.vel.add(p5.Vector.mult(this.acc, engine.timestep))
-    this.prev_pos = this.pos.copy()
+    this.prevPos = this.pos.copy()
     this.pos.add(p5.Vector.mult(this.vel, engine.timestep))
+    this.Ek = 0.5*this.mass*this.vel.mag()**2
   }
 
-  render() {
+  render(panelHighlight=false) {
+    this.mouseOrIndexHighlight = false
+    if(this.indexHighlightLoad || this.mouseisover()) {
+      this.mouseOrIndexHighlight = true
+    }
     stroke(100)
     push()
     translate(this.pos.x*scl, this.pos.y*scl)
     rotate(- this.angle)
     rectMode(CENTER)
-    if(this.mouseisover()) {
+    if(this.mouseOrIndexHighlight || panelHighlight) {
       stroke(color(100,100,255))
       rect(0, 0, this.side*scl + 2, this.side*scl + 2)
     }
     fill(color(255,150,150))
     rect(0, 0, this.side*scl, this.side*scl)
+    if(!this.draggingVel) {
+      fill(100,100,100)
+      stroke(100,100,100)
+      rect(0, 0, scl*this.side/6, scl*this.side/6)
+    } else {
+      line(0, 0, (rmouseX - this.pos.x)*scl, (rmouseY - this.pos.y)*scl)
+    }
     rectMode(CORNER)
     pop()
+  }
+
+  isOnVelSelector() {
+    if(rmouseX > this.pos.x - (this.side/6)/2 && rmouseX < this.pos.x + (this.side/6)/2 && rmouseY > this.pos.y - (this.side/6)/2 && rmouseY < this.pos.y + (this.side/6)/2) {
+      this.origvel = createVector(rmouseX, rmouseY)
+      this.draggingVel = true
+      this.openControl()
+      return true
+    }
+    return false
+  }
+
+  dragVelSelector() {
+    if(this.draggingVel && !engine.running) {
+      this.vel = createVector(rmouseX, rmouseY).sub(this.origvel).mult(5)
+      panel.controlPanel.update(true)
+    }
+  }
+
+  releasedVelSelector() {
+    if(this.draggingVel) {
+      this.vel = createVector(rmouseX, rmouseY).sub(this.origvel).mult(5)
+      this.draggingVel = false
+      panel.controlPanel.update(true)
+    }
   }
   
   mouseisover() {
@@ -717,16 +750,18 @@ class PointMass {
       engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
     }
     engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
+    engine.renderOrder.splice(engine.renderOrder.indexOf(this), 1)
   }
 }
 class Spring {
   constructor() {
-    this.located = false
     this.id = uuidv4()
+    this.located = false
     this.length = 1
     this.k = 10  // N/m
     this.isspring = true
     this.elong = 0
+    this.place = 0
     this.end1 = {
       located: false,
       ispivot: true,
@@ -772,16 +807,30 @@ class Spring {
       this.located = true
     }
     if(this.end1.located && this.end2.located) {
+      this.calcNumBorders()
       this.update()
       this.render()
     }
   }
 
-  update() {
-    this.elong = ((this.end1.pos.x - this.end2.pos.x)**2 + (this.end1.pos.y - this.end2.pos.y)**2)**0.5 - this.length
+  calcNumBorders() {
+    this.numBorders = floor(this.length*4)
+    this.widthScl = scl*this.k/10
   }
 
-  render() {
+  update() {
+    this.edgDist = ((this.end1.pos.x - this.end2.pos.x)**2 + (this.end1.pos.y - this.end2.pos.y)**2)**0.5
+    this.renLength = this.numBorders*0.25
+    this.elong = this.edgDist - this.length
+  }
+
+  render(panelHighlight=false) {
+    this.mouseOrIndexHighlight = false
+    if(this.indexHighlightLoad || this.mouseisover()) {
+      this.mouseOrIndexHighlight = true
+    }
+
+    this.calcNumBorders()
     stroke(75)
     fill(175)
 
@@ -800,20 +849,47 @@ class Spring {
     push()
     let savescl = scl
     translate(this.end1.pos.x*scl, this.end1.pos.y*scl)
-    scl = scl*(this.elong + this.length)/this.length
+    scl = scl*this.edgDist
     rotate(angle)
+
+    if(this.mouseOrIndexHighlight || panelHighlight) {
+      strokeWeight(2);stroke(color(100,100,255))
+      line(0, 0, 0.1*scl, 0)
+      strokeWeight(1);stroke(100)
+    }
     line(0, 0, 0.1*scl, 0)
-    for(let i = 0; i < 4; i++) {
-      line((0.1 + i*0.2)*scl, 0, (0.1 + i*0.2 + 0.05)*scl, 0.1*savescl)
-      line((0.1 + i*0.2 + 0.05)*scl, 0.1*savescl, (0.1 + i*0.2 + 0.15)*scl, - 0.1*savescl)
-      line((0.1 + i*0.2 + 0.15)*scl, - 0.1*savescl, (0.1 + (i + 1)*0.2)*scl, 0)
+  
+    let savescl2 = scl
+    scl = scl*4/this.numBorders
+    for(let i = 0; i < this.numBorders; i++) {
+      if(this.mouseOrIndexHighlight || panelHighlight) {
+        strokeWeight(2);stroke(color(100,100,255))
+        line(0.1*savescl2 + (i*0.2)*scl, 0, 0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl)
+        line(0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl, 0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl)
+        line(0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl, 0.1*savescl2 + ((i + 1)*0.2)*scl, 0)
+        strokeWeight(1);stroke(100)
+      }
+      line(0.1*savescl2 + (i*0.2)*scl, 0, 0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl)
+      line(0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl, 0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl)
+      line(0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl, 0.1*savescl2 + ((i + 1)*0.2)*scl, 0)
+    }
+    scl = savescl2
+
+    if(this.mouseOrIndexHighlight || panelHighlight) {
+      strokeWeight(2);stroke(color(100,100,255))
+      line(0.9*scl, 0, 1*scl, 0)
+      strokeWeight(1);stroke(100)
     }
     line(0.9*scl, 0, 1*scl, 0)
+
     pop()
     scl = savescl
+
   }
 
-  openControl() {}
+  openControl() {
+    panel.openControl(this.id)
+  }
 
   mouseisover() {
     return false
@@ -824,25 +900,273 @@ class Spring {
       engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
     }
     engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
+    engine.renderOrder.splice(engine.renderOrder.indexOf(this), 1)
   }
+}
+class Engine {
+  constructor() {
+    this.unit     = 20 //pixels per unit (unit may be meter, cm, etc)
+    this.fps      = 60
+    this.timestep = 0
+    this.time     = 0
+    this.objectonhold = false
+    this.dyn_objects_dis   = []
+    this.still_objects_dis = []
+    this.dyn_objects       = []
+    this.still_objects     = []
+    this.graphs            = []
+    this.renderOrder       = []
+    this.running = false
+    this.jointpanel = new JointPanel()
+    this.intHandler = new IntHandler()
+    this.lastPointMass = -1
+    this.justAdded = false
+  }
+
+  run() {
+    this.running = true
+    this.timestep = 1/this.fps
+  }
+
+  stop() {
+    this.running = false
+  }
+
+  update() {
+    this.time = this.time + this.timestep
+    this.intHandler.execute()
+    this.dyn_objects.forEach(element => {
+      element.update()
+    })
+    this.graphs.forEach(element => {
+      element.update()
+    })
+  }
+
+  renderObjects() {
+    this.renderOrder.forEach(element => {
+      if(panel.focus.id == element.id) {
+        element.render(true)
+      } else {
+        element.render()
+      }
+    })
+  }
+  
+  renderGraphs() {
+    this.graphs.forEach(element => {
+      element.render()
+    })
+  }
+
+  indexHighlight(id) {
+    this.dyn_objects.forEach(element => {
+      if(element.id == id) {
+        element.indexHighlightLoad = true
+      } else {
+        element.indexHighlightLoad = false
+      }
+    });
+  }
+
+  stopIndexHighlight() {
+    this.dyn_objects.forEach(element => {
+      element.indexHighlightLoad = false
+    });
+  }
+
+  clicked() {
+    if(drawingcnv.mouseisover()) {
+      if(this.objectonhold) {
+        this.dyn_objects_dis[this.dyn_objects_dis.length - 1].locate()
+        if(this.dyn_objects_dis[this.dyn_objects_dis.length - 1].located) {
+          this.orderObjects()
+          this.objectonhold = false
+          this.dyn_objects_dis[this.dyn_objects_dis.length - 1].openControl()
+          panel.indexPanel.updateHighlight()
+        }
+      } else {
+        this.dyn_objects.forEach(element => {
+          if(element.mouseisover()) {
+            element.openControl()
+            panel.indexPanel.updateHighlight()
+          }
+        })
+        this.graphs.forEach(element => {
+          if(element.mouseisover()) {
+            element.openControl()
+            panel.indexPanel.updateHighlight()
+          }
+        })
+      }
+    } else {
+      if(this.objectonhold && !this.justAdded) {
+        this.dyn_objects_dis[this.dyn_objects_dis.length - 1].remove()
+        this.objectonhold = false
+      }
+    }
+    this.justAdded = false
+  }
+
+  orderObjects() {
+    this.dyn_objects = []
+    this.still_objects = []
+    this.renderOrder = []
+    this.graphs = []
+    // Fills graphs array and removes unplaced element
+    this.dyn_objects_dis.forEach(element => {
+      if(!element.located) {
+        element.remove()
+      }
+      if(element.isgraph) {
+        this.graphs.push(element)
+      }
+    })
+    // Fills dynamic objects array
+    let pointMassPlace = 1
+    this.dyn_objects_dis.forEach(element => {
+      if(element.ispointmass) {
+        this.dyn_objects.push(element)
+        element.place = pointMassPlace
+        pointMassPlace += 1
+      }
+    })
+    let springPlace = 1
+    this.dyn_objects_dis.forEach(element => {
+      if(element.isspring) {
+        this.dyn_objects.push(element)
+        element.place = springPlace
+        springPlace += 1
+      }
+    })
+    let inclinePlace = 1
+    this.dyn_objects_dis.forEach(element => {
+      if(element.isincline) {
+        this.dyn_objects.push(element)
+        element.place = inclinePlace
+        inclinePlace += 1
+      }
+    })
+    // Fills still objects array
+    this.still_objects_dis.forEach(element => {
+      if(element.isgravity) {
+        this.still_objects.push(element)
+      }
+    })
+    this.still_objects_dis.forEach(element => {
+      if(element.isfloor) {
+        this.still_objects.push(element)
+      }
+    })
+    // Fills rendering order array
+    this.still_objects.forEach(element => {
+      if(element.isfloor) {
+        this.renderOrder.push(element)
+      }
+    })
+    this.dyn_objects.forEach(element => {
+      if(element.isincline) {
+        this.renderOrder.push(element)
+      }
+    })
+    this.dyn_objects.forEach(element => {
+      if(element.ispointmass) {
+        this.renderOrder.push(element)
+      }
+    })
+    this.dyn_objects.forEach(element => {
+      if(element.isspring) {
+        this.renderOrder.push(element)
+      }
+    })
+
+    panel.indexPanel.update()
+  }
+
+  findById(id) {
+    this.dyn_objects.forEach(element => {
+      if(element.id == id) {
+        console.log(element)
+        return element
+      }
+    })
+  }
+}
+class IntHandler {
+  execute() {
+    for(let i = 0; i < engine.dyn_objects.length; i++) {
+      let element1 = engine.dyn_objects[i];
+      for(let e = i + 1; e < engine.dyn_objects.length; e++) {
+        let element2 = engine.dyn_objects[e];
+        if(element1.ispointmass && element2.ispointmass) {
+          this.pointMassCollision(element1, element2)
+        }
+      }
+    }
+  }
+
+  pointMassCollision(mass1, mass2) {
+    if(areCollidingJustNow(mass1, mass2)) {
+      let relNormal1 = p5.Vector.sub(mass2.pos, mass1.pos).normalize()
+      let relNormal2 = p5.Vector.sub(mass1.pos, mass2.pos).normalize()
+      let normVelMag1 = p5.Vector.dot(relNormal1, mass1.vel)
+      let normVelMag2 = p5.Vector.dot(relNormal2, mass2.vel)
+      let newNormVelMag1 = normVelMag1 - 2*mass2.mass*p5.Vector.dot(p5.Vector.sub(mass1.vel, mass2.vel), relNormal1)/(mass1.mass + mass2.mass)
+      let newNormVelMag2 = normVelMag2 - 2*mass1.mass*p5.Vector.dot(p5.Vector.sub(mass2.vel, mass1.vel), relNormal2)/(mass1.mass + mass2.mass)
+      let relTang1 = relNormal1.copy().rotate(radians(90))
+      let relTang2 = relNormal2.copy().rotate(radians(90))
+      let tanVel1 = p5.Vector.mult(relTang1, p5.Vector.dot(relTang1, mass1.vel))
+      let tanVel2 = p5.Vector.mult(relTang2, p5.Vector.dot(relTang2, mass2.vel))
+      let normVel1 = p5.Vector.mult(relNormal1, newNormVelMag1)
+      let normVel2 = p5.Vector.mult(relNormal2, newNormVelMag2)
+      mass1.vel = p5.Vector.add(normVel1, tanVel1)
+      mass2.vel = p5.Vector.add(normVel2, tanVel2)
+    }
+
+    function areCollidingJustNow(mass1, mass2) {
+      let disSq = (mass1.side/2 + mass2.side/2)**2
+      if(p5.Vector.sub(mass1.pos, mass2.pos).magSq() < disSq && p5.Vector.sub(mass1.prevPos, mass2.prevPos).magSq() >= disSq) {
+        return true
+      }
+      return false
+    }
+  }
+
+  pointMassSpring(mass, spring) {}
+
+  pointMassIncline(mass, incline) {}
+
+  elementGravity(element, gravity) {}
+
+  elementFloor(element, floor) {}
 }
 class JointPanel {
   placeGravity() {
-    engine.env_interacts.push({vector: createVector(0, -9.8)})
-    this.gravity = engine.env_interacts[engine.env_interacts.length - 1]
+    engine.still_objects_dis.push({vector: createVector(0, -9.8), isgravity: true, id: uuidv4()})
+    this.gravity = engine.still_objects_dis[engine.still_objects_dis.length - 1]
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
+    panel.openControl(this.gravity.id)
   }
 
   removeGravity() {
-    engine.env_interacts.splice(engine.env_interacts.indexOf(this.gravity), 1)
+    engine.still_objects_dis.splice(engine.still_objects_dis.indexOf(this.gravity), 1)
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
   }
 
   placeFloor() {
-    engine.still_objects.push(new Floor(engine.still_objects.length))
-    this.floor = engine.still_objects[engine.still_objects.length - 1]
+    engine.still_objects_dis.push(new Floor())
+    this.floor = engine.still_objects_dis[engine.still_objects_dis.length - 1]
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
+    panel.openControl(this.floor.id)
   }
 
   removeFloor() {
-    engine.still_objects[engine.still_objects.indexOf(this.floor)].remove()
+    engine.still_objects_dis.splice(engine.still_objects_dis.indexOf(this.floor), 1)
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
   }
 
   createPointMass() {
@@ -867,6 +1191,101 @@ class JointPanel {
     engine.dyn_objects_dis.push(new Graph())
     engine.objectonhold = true
     engine.justAdded = true
+  }
+}
+class ControlPanelTable {
+  constructor(focus, title, refs) {
+    this.focus = focus
+    this.refs = refs
+    let panelIn
+    panelIn =  '<table class="table table-bordered table-sm" style="text-align:center; margin-bottom:0px">'
+    panelIn += '  <thead>'
+    panelIn += '    <tr>'
+    panelIn += '      <th colspan=4>'
+    panelIn += '        <div>'
+    panelIn +=            title
+    panelIn += '          <button type="button" id="controlremove" class="btn btn-outline-primary" style="margin: 0"><i class="fas fa-trash"></i></button>'
+    panelIn += '        </div>'
+    panelIn += '      </th>'
+    panelIn += '    </tr>'
+    panelIn += '  </thead>'
+
+    let numRows = ceil(this.refs.length/2)
+    panelIn += '  <tbody>'
+    for(let i = 0; i < numRows; i++) {
+      panelIn += '  <tr>'
+      panelIn += '    <th>' + refs[i*2][0] + '</th>';
+      panelIn += '    <td id="control' + refs[i*2][3] + '" ' + (refs[i*2][1] ? 'contenteditable' : '') + '>0</td>'
+      if(refs[i*2 + 1] != undefined) {
+        panelIn += '  <th>' + refs[i*2 + 1][0] + '</th>';
+        panelIn += '  <td id="control' + refs[i*2 + 1][3] + '" ' + (refs[i*2 + 1][1] ? 'contenteditable' : '') + '>0</td>'
+        panelIn += '</tr>'
+      }
+    }
+    panelIn += '  </tbody>'
+
+    panelIn += '</table>'
+
+    document.getElementById("controlpanel").innerHTML = panelIn
+  }
+
+  addSetButton() {
+    document.getElementById("setcontrol").onclick = function() {
+      for(let i = 0; i < panel.controlPanel.table.refs.length; i++) {
+        if(panel.controlPanel.table.refs[i][1]) {
+          if(!isNaN(document.getElementById("control" + panel.controlPanel.table.refs[i][3]).innerHTML)) {
+            if(panel.controlPanel.table.refs[i][2].length == 1) {
+              panel.focus[panel.controlPanel.table.refs[i][2][0]] = Number(document.getElementById("control" + panel.controlPanel.table.refs[i][3]).innerHTML)
+            } else if(panel.controlPanel.table.refs[i][2].length == 2) {
+              panel.focus[panel.controlPanel.table.refs[i][2][0]][panel.controlPanel.table.refs[i][2][1]] = Number(document.getElementById("control" + panel.controlPanel.table.refs[i][3]).innerHTML)
+            }
+          }
+        }
+      }
+      if(panel.focus.isincline) {
+        panel.focus.updateEdges()
+      } else if(panel.focus.isspring) {
+        panel.focus.calcNumBorders()
+      }
+      panel.controlPanel.update(true)
+    }
+  }
+
+  update() {
+    // This logic is for the panel to update when placing the point mass, but for it
+    // not to continue updating if the engine is not running
+    for(let i = 0; i < this.refs.length; i++) {
+      if(this.refs[i][2].length == 1) {
+        document.getElementById("control" + this.refs[i][3]).innerHTML = this.focus[this.refs[i][2][0]].toFixed(2)
+      } else if(this.refs[i][2].length == 2) {
+        document.getElementById("control" + this.refs[i][3]).innerHTML = this.focus[this.refs[i][2][0]][this.refs[i][2][1]].toFixed(2)
+      }
+    }
+  }
+}
+class FloorPanel {
+  constructor(focus) {
+    this.focus = focus
+
+    // Number is to tell if the field is editable or not
+    this.table = new ControlPanelTable(this.focus, 'Floor',
+                                       [['Stat. coeff.', 1, ['statcoeff'], 'statcoeff'], ['Kin. coeff.', 1, ['kincoeff'], 'kincoeff']])
+
+    let panelIn = '<div style="text-align:right"><button type="button" id="setcontrol" class="btn btn-outline-primary">Set</button></div>'
+    document.getElementById("controlpanel").innerHTML += panelIn
+
+    this.table.addSetButton()
+
+    this.update(true)
+  }
+
+  update(run=false) {
+    if(engine.running && !run) {
+      run = true
+    }
+    if(run) {
+      this.table.update()
+    }
   }
 }
 class GraphPanel {
@@ -896,7 +1315,10 @@ class GraphPanel {
     })
 
     let panelIn
-    panelIn =  '<div style="text-align:center;font-size:16px;font-weight:700">Graph</div>'
+    panelIn =  '<div style="text-align:center;font-size:16px;font-weight:700">'
+    panelIn += '  Graph'
+    panelIn += '  <button type="button" id="controlremove" class="btn btn-outline-primary" style="margin: 0"><i class="fas fa-trash"></i></button>'
+    panelIn += '</div>'
     panelIn += '<div>Horizontal axis:</div>'
     panelIn += '<div class="btn-group" style="margin-bottom:10px">'
     panelIn += '  <button id="hor-drop-obj" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
@@ -953,9 +1375,40 @@ class GraphPanel {
     panelIn += '  </div>'        
     panelIn += '</div>'
 
+    panelIn += '<div style="margin-top:10px">'
+    panelIn += '  Hor:'
+    panelIn +=   '<button style="margin-top:0" id="horzoomingraph" class="btn btn-outline-primary"><i class="fas fa-plus fa-sm"></i></button>'
+    panelIn +=   '<button style="margin-top:0;margin-right:10px" id="horzoomoutgraph" class="btn btn-outline-primary"><i class="fas fa-minus fa-sm"></i></button>'
+    panelIn += '  Ver:'
+    panelIn +=   '<button style="margin-top:0" id="verzoomingraph" class="btn btn-outline-primary"><i class="fas fa-plus fa-sm"></i></button>'
+    panelIn +=   '<button style="margin-top:0" id="verzoomoutgraph" class="btn btn-outline-primary"><i class="fas fa-minus fa-sm"></i></button>'
+    panelIn += '</div>'
+
     document.getElementById("controlpanel").innerHTML = panelIn
+
+    document.getElementById("horzoomingraph").onclick = function() {
+      let center = createVector((panel.focus.plot.cam.x + panel.focus.plot.width/2)/panel.focus.plot.horscl, 0)
+      panel.focus.plot.horscl *= 1.2
+      panel.focus.plot.cam.x = (center.x*panel.focus.plot.horscl - panel.focus.plot.width/2)
+    }
+    document.getElementById("horzoomoutgraph").onclick = function() {
+      let center = createVector((panel.focus.plot.cam.x + panel.focus.plot.width/2)/panel.focus.plot.horscl, 0)
+      panel.focus.plot.horscl *= 1/1.2
+      panel.focus.plot.cam.x = (center.x*panel.focus.plot.horscl - panel.focus.plot.width/2)
+    }
+    document.getElementById("verzoomingraph").onclick = function() {
+      let center = createVector(0, (panel.focus.plot.cam.y + panel.focus.plot.height/2)/panel.focus.plot.verscl)
+      panel.focus.plot.verscl *= 1.2
+      panel.focus.plot.cam.y = (center.y*panel.focus.plot.verscl - panel.focus.plot.height/2)
+    }
+    document.getElementById("verzoomoutgraph").onclick = function() {
+      let center = createVector(0, (panel.focus.plot.cam.y + panel.focus.plot.height/2)/panel.focus.plot.verscl)
+      panel.focus.plot.verscl *= 1/1.2
+      panel.focus.plot.cam.y = (center.y*panel.focus.plot.verscl - panel.focus.plot.height/2)
+    }
+
     this.group.forEach(element1 => {
-      let element1Id = this.group.findIndex(thing => thing == element1)
+      let element1Id = this.group.indexOf(element1)
 
       // When clicking the horizontal left drop...
       document.getElementById(element1.id + 'hor').onclick = () => {
@@ -963,9 +1416,9 @@ class GraphPanel {
         let params = ''
         // Add the corresponding params to the right drop...
         element1.params.forEach(element2 => {
-          let element2Id = this.group[element1Id].params.findIndex(thing => thing == element2)
+          let element2Id = this.group[element1Id].params.indexOf(element2)
           // So it executes the execute function in them when clicking (which is on the Param class)
-          params += '<a class="dropdown-item" onclick="panel.interior.group[' + element1Id + '].params[' + element2Id + '].execute(1)" href="#">' + element2.name + '</a>'
+          params += '<a class="dropdown-item" onclick="panel.controlPanel.group[' + element1Id + '].params[' + element2Id + '].execute(1)" href="#">' + element2.name + '</a>'
         })
         document.getElementById("control-hor-params").innerHTML = params
         // And fill with text 'parameter' every time a left selection changes
@@ -978,9 +1431,9 @@ class GraphPanel {
         let params = ''
         // Add the corresponding params to the right drop...
         element1.params.forEach(element2 => {
-          let element2Id = this.group[element1Id].params.findIndex(thing => thing == element2)
+          let element2Id = this.group[element1Id].params.indexOf(element2)
           // So it executes the execute function in them when clicking (which is on the Param class)
-          params += '<a class="dropdown-item" onclick="panel.interior.group[' + element1Id + '].params[' + element2Id + '].execute(2)" href="#">' + element2.name + '</a>'
+          params += '<a class="dropdown-item" onclick="panel.controlPanel.group[' + element1Id + '].params[' + element2Id + '].execute(2)" href="#">' + element2.name + '</a>'
         })
         document.getElementById("control-ver-params").innerHTML = params
         // And fill with text 'parameter' every time a left selection changes
@@ -989,6 +1442,9 @@ class GraphPanel {
     })
   }
 }
+
+
+
 class Param {
   constructor(name, parentId, index, focus) {
     this.focus = focus
@@ -1007,12 +1463,173 @@ class Param {
     }
   }
 }
+class GravityPanel {
+  constructor(focus) {
+    this.focus = focus
+
+    // Number is to tell if the field is editable or not
+    this.table = new ControlPanelTable(this.focus, 'Gravity',
+                                       [['x value', 1, ['vector', 'x'], 'valx'], ['y value', 1, ['vector', 'y'], 'valy']])
+
+    let panelIn = '<div style="text-align:right"><button type="button" id="setcontrol" class="btn btn-outline-primary">Set</button></div>'
+    document.getElementById("controlpanel").innerHTML += panelIn
+
+    this.table.addSetButton()
+
+    this.update(true)
+  }
+
+  update(run=false) {
+    if(engine.running && !run) {
+      run = true
+    }
+    if(run) {
+      this.table.update()
+    }
+  }
+}
+class InclinePanel {
+  constructor(focus) {
+    this.focus = focus
+
+    this.table = new ControlPanelTable(this.focus, 'Point Mass ' + this.focus.place, 
+                                       [['Width', 1, ['width'], 'width'], ['Height', 1, ['height'], 'height'],
+                                        ['Stat. coeff.', 1, ['statcoeff'], 'statcoeff'], ['Kin. coeff.', 1, ['kincoeff'], 'kincoeff']])
+
+    let panelIn = ''
+    panelIn += '<div style="text-align:right">'
+    panelIn += '  <div class="pretty p-switch" style="margin-right:0;">'
+    panelIn += '    <input type="checkbox" />'
+    panelIn += '    <div class="state">'
+    panelIn += '      <label>Orientation</label>'
+    panelIn += '    </div>'
+    panelIn += '  </div>'
+    panelIn += '  <button type="button" style="margin-top:0" id="setcontrol" class="btn btn-outline-primary">Set</button>'
+    panelIn += '</div>'
+    document.getElementById("controlpanel").innerHTML += panelIn
+
+    this.table.addSetButton()
+
+    this.update(true)
+  }
+
+  update(run=false) {
+    // This logic is for the panel to update when placing the point mass, but for it
+    // not to continue updating if the engine is not running
+    if(engine.running && !run) {
+      run = true
+    }
+    if(run) {
+      this.table.update()
+    }
+  }
+}
+class PointMassPanel {
+  constructor(focus) {
+    this.focus = focus
+
+    // Number is to tell if the field is editable or not
+    this.table = new ControlPanelTable(this.focus, 'Point Mass ' + this.focus.place,
+                                       [['x pos.', 1, ['pos', 'x'], 'posx'], ['y pos.', 1, ['pos', 'y'], 'posy'],
+                                        ['x vel.', 1, ['vel', 'x'], 'velx'], ['y vel.', 1, ['vel', 'y'], 'vely'],
+                                        ['x acc.', 0, ['acc', 'x'], 'accx'], ['y acc.', 0, ['acc', 'y'], 'accy'],
+                                        ['mass', 1, ['mass'], 'm'], ['Kin. energy', 0, ['Ek'], 'Ek']])
+
+    let panelIn = '<div style="text-align:right"><button type="button" id="setcontrol" class="btn btn-outline-primary">Set</button></div>'
+    document.getElementById("controlpanel").innerHTML += panelIn
+
+    this.table.addSetButton()
+
+    this.update(true)
+  }
+
+  update(run=false) {
+    if(engine.running && !run) {
+      run = true
+    }
+    if(run) {
+      this.table.update()
+    }
+  }
+}
+class SpringPanel {
+  constructor(focus) {
+    this.focus = focus
+
+    // Number is to tell if the field is editable or not
+    this.table = new ControlPanelTable(this.focus, 'Spring ' + this.focus.place,
+                                       [['Nat. len.', 1, ['length'], 'len'], ['K(cons.).', 1, ['k'], 'kcons']])
+
+    let panelIn = '<div style="text-align:right"><button type="button" id="setcontrol" class="btn btn-outline-primary">Set</button></div>'
+    document.getElementById("controlpanel").innerHTML += panelIn
+
+    this.table.addSetButton()
+
+    this.update(true)
+  }
+
+  update(run=false) {
+    if(engine.running && !run) {
+      run = true
+    }
+    if(run) {
+      this.table.update()
+    }
+  }
+}
+class IndexPanel {
+  constructor() {
+    let panelIn
+    panelIn =  '<table id="indexpaneltable" class="table table-bordered table-sm table-hover" style="margin-bottom:0">'
+    panelIn += '  <thead style="text-align:center">'
+    panelIn += '    <tr><th>On World</th></tr>'
+    panelIn += '  </thead>'
+    panelIn += '  <tbody id="indexpanelbody">'
+    panelIn += '  </tbody>'
+    panelIn += '</table>'
+
+    document.getElementById('indexpanel').innerHTML = panelIn
+  }
+
+  update() {
+    let bodyIn = ''
+    engine.still_objects.forEach(element => {
+      bodyIn += '<tr id="indexpanelrow' + element.id + '" onclick="panel.openControl(\'' + element.id + '\');panel.indexPanel.updateHighlight()">'
+      if(element.isgravity){bodyIn += '<td>Gravity</td>'}
+      if(element.isfloor)  {bodyIn += '<td>Floor</td>'}
+      bodyIn += '</tr>'
+    })
+    engine.dyn_objects.forEach(element => {
+      bodyIn += '<tr id="indexpanelrow' + element.id + '" onclick="panel.openControl(\'' + element.id + '\');panel.indexPanel.updateHighlight()" onmouseover="engine.indexHighlight(\'' + element.id + '\')" onmouseout="engine.stopIndexHighlight()">'
+      if(element.ispointmass){bodyIn += '<td>Point Mass ' + element.place + '</td>'}
+      if(element.isincline)  {bodyIn += '<td>Incline ' + element.place + '</td>'}
+      if(element.isspring)   {bodyIn += '<td>Spring ' + element.place + '</td>'}
+      bodyIn += '</tr>'
+    })
+
+    document.getElementById('indexpanelbody').innerHTML = bodyIn
+  }
+
+  updateHighlight() {
+    if(panel.theresControl) {
+      let table = document.getElementById("indexpaneltable");
+      for(let i = 0, row; row = table.rows[i]; i++) {
+        if(row.classList.contains('table-active') && row.id != 'indexpanelrow' + panel.focus.id) {
+          row.classList.remove('table-active')
+        }
+        if(!row.classList.contains('table-active') && row.id == 'indexpanelrow' + panel.focus.id) {
+          row.classList.add('table-active')
+        }
+      }
+    }
+  }
+}
 class Panel {
   constructor() {
     this.width = 300
     this.theresControl = false
-    this.controlFocusId
     this.focus
+    this.indexPanel = new IndexPanel()
 
     document.getElementById("floor-toggle").onchange = function() {
       if(this.checked) {
@@ -1071,108 +1688,56 @@ class Panel {
 
   openControl(id) {
     this.theresControl = true
-    this.controlFocusId = id
+    engine.still_objects.forEach(element => {
+      if(element.id == id) {
+        this.focus = element
+      }
+    })
     engine.dyn_objects.forEach(element => {
-      if(element.id == this.controlFocusId) {
+      if(element.id == id) {
         this.focus = element
       }
     })
     engine.graphs.forEach(element => {
-      if(element.id == this.controlFocusId) {
+      if(element.id == id) {
         this.focus = element
       }
     })
-    if(this.focus.ispointmass) {
-      this.interior = new PointMassPanel(this.focus)
+    if(this.focus.isgravity) {
+      this.controlPanel = new GravityPanel(this.focus)
+    } else if(this.focus.isfloor) {
+      this.controlPanel = new FloorPanel(this.focus)
+    } else if(this.focus.ispointmass) {
+      this.controlPanel = new PointMassPanel(this.focus)
+    } else if(this.focus.isincline) {
+      this.controlPanel = new InclinePanel(this.focus)
+    } else if(this.focus.isspring) {
+      this.controlPanel = new SpringPanel(this.focus)
     } else if(this.focus.isgraph) {
-      this.interior = new GraphPanel(this.focus)
+      this.controlPanel = new GraphPanel(this.focus)
     }
+
+    document.getElementById("controlremove").onclick = function() {
+      panel.focus.remove()
+      document.getElementById("controlpanel").innerHTML = ''
+      panel.theresControl = false
+      panel.indexPanel.update()
+    }
+
+    // thes her' logic goes t' keep tha indexpanel heigh' stady
+    document.getElementById("indexpanel").style.maxHeight = (height - document.getElementById("top-buttons").offsetHeight - document.getElementById("bottom").offsetHeight -  document.getElementById("controlpanel").offsetHeight - 30) + "px"
   }
 
   update() {
-    if(this.theresControl) {
-      if(this.focus.ispointmass) {
-        this.interior.update()
-      }
-    }
-  }
-}
-class PointMassPanel {
-  constructor(focus) {
-    this.focus = focus
-
-    let panelIn
-    panelIn =  '<table class="table table-bordered table-sm" style="text-align: center; margin-bottom:0px">'
-    panelIn += '  <thead>'
-    panelIn += '    <tr>'
-    panelIn += '      <th colspan=4>'
-    panelIn += '        <div>'
-    panelIn += '          Point Mass ' + this.focus.place
-    panelIn += '          <button type="button" id="controlremove" class="btn btn-outline-primary" style="margin: 0"><i class="fas fa-trash"></i></button>'
-    panelIn += '        </div>'
-    panelIn += '      </th>'
-    panelIn += '    </tr>'
-    panelIn += '  </thead>'
-    panelIn += '  <tbody>'
-    panelIn += '    <tr>'
-    panelIn += '      <th>x</th>'
-    panelIn += '      <td id="controlx">0</td>'
-    panelIn += '      <th>y</th>'
-    panelIn += '      <td id="controly">0</td>'
-    panelIn += '    </tr>'
-    panelIn += '    <tr>'
-    panelIn += '      <th>vx</th>'
-    panelIn += '      <td id="controlvx">0</td>'
-    panelIn += '      <th>vy</th>'
-    panelIn += '      <td id="controlvy">0</td>'
-    panelIn += '    </tr>'
-    panelIn += '    <tr>'
-    panelIn += '      <th>ax</th>'
-    panelIn += '      <td id="controlax">0</td>'
-    panelIn += '      <th>ay</th>'
-    panelIn += '      <td id="controlay">0</td>'
-    panelIn += '    </tr>'
-    panelIn += '    <tr>'
-    panelIn += '      <th>m</th>'
-    panelIn += '      <td id="controlm">0</td>'
-    panelIn += '      <th>Ek</th>'
-    panelIn += '      <td id="controlek">0</td>'
-    panelIn += '    </tr>'
-    panelIn += '  </tbody>'
-    panelIn += '</table>'
-
-    document.getElementById("controlpanel").innerHTML = panelIn
-    this.update(true)
-  }
-
-  update(run=false) {
-    // This logic is for the panel to update when placing the point mass, but for it
-    // not to continue updating wasting computing power if the engine is not running
-    if(engine.running && !run) {
-      run = true
-    }
-    if(run) {
-      document.getElementById("controlx").innerHTML = this.focus.pos.x.toFixed(2)
-      document.getElementById("controly").innerHTML = this.focus.pos.y.toFixed(2)
-      document.getElementById("controlvx").innerHTML = this.focus.vel.x.toFixed(2)
-      document.getElementById("controlvy").innerHTML = this.focus.vel.y.toFixed(2)
-      document.getElementById("controlax").innerHTML = this.focus.acc.x.toFixed(2)
-      document.getElementById("controlay").innerHTML = this.focus.acc.y.toFixed(2)
-      document.getElementById("controlm").innerHTML = this.focus.mass.toFixed(2)
-      document.getElementById("controlek").innerHTML = (0.5*this.focus.mass*this.focus.vel.mag()**2).toFixed(2)
-      document.getElementById("controlremove").onclick = function() {
-        panel.focus.remove()
-        document.getElementById("controlpanel").innerHTML = ''
-        panel.theresControl = false
-      }
+    if(this.theresControl && !this.focus.isgraph) {
+      this.controlPanel.update()
     }
   }
 }
 class DrawingCanvas {
-  constructor(widthArg) {
+  constructor() {
     this.x = - 1*scl
     this.y = - 2*scl
-    this.width = widthArg
     this.transqueue = createVector(0,0)
     this.zoom = 1
     this.grid()
@@ -1193,13 +1758,19 @@ class DrawingCanvas {
   }
 
   zoomin() {
+    let center = createVector((this.x + width/2)/scl, (this.y + height/2)/scl)
     scl = 1.2*scl
     px = 1/scl
+    this.x = (center.x*scl - width/2)
+    this.y = (center.y*scl - height/2)
   }
 
   zoomout() {
+    let center = createVector((this.x + width/2)/scl, (this.y + height/2)/scl)
     scl = 0.8*scl
     px = 1/scl
+    this.x = (center.x*scl - width/2)
+    this.y = (center.y*scl - height/2)
   }
 
   // render() {
@@ -1243,8 +1814,8 @@ class DrawingCanvas {
       xy = scl - this.y%scl
     }
 
-    let lastx = floor(this.width/scl)
-    if(this.width - lastx*scl < xx) {
+    let lastx = floor(width/scl)
+    if(width - lastx*scl < xx) {
       lastx = lastx - 1
     }
     let lasty = floor(height/scl)
@@ -1273,7 +1844,7 @@ class DrawingCanvas {
       }
     }
     for(let i = 0; i < lasty + 1; i++) {
-      line(this.x, xy + this.y + scl*i, this.x + this.width, xy + this.y + scl*i)
+      line(this.x, xy + this.y + scl*i, this.x + width, xy + this.y + scl*i)
       push()
       if(this.x > -22) {
         translate(this.x + 22, xy + this.y + scl*i)
@@ -1308,61 +1879,12 @@ class DrawingCanvas {
   }
 
   mouseisover() {
-    if(mouseX > 0 && mouseX < this.width && mouseY > 0 && mouseY < height) {
+    if(mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
       return true
     }
     return false
   }
 }
-function mouseClicked() {
-  engine.clicked()
-}
-
-let movingGraph = false
-let graphIndex = 0
-function mousePressed() {
-  //Most of this is logic for moving the graph
-  if(drawingcnv.mouseisover()) {
-    engine.graphs.forEach(element => {
-      if(element.mouseisover()) {
-        graphIndex = engine.graphs.findIndex(thing => thing == element)
-        if(!element.mouseoverinner()) {
-          element.outerDragged = true
-          element.innerDragged = false
-        } else {
-          element.outerDragged = false
-          element.innerDragged = true
-        }
-        element.pressed()
-        movingGraph = true
-      }
-    })
-    //Until here
-    if(!movingGraph) {
-      drawingcnv.pressed()
-      
-    }
-  }
-}
- 
-function mouseDragged() {
-  if(drawingcnv.mouseisover()) {
-    if(movingGraph) {
-      engine.graphs[graphIndex].dragged()
-    } else {
-      drawingcnv.dragged()
-    }
-  }
-}
-
-function mouseReleased() {
-  if(movingGraph) {
-    movingGraph = false
-    engine.graphs[graphIndex].released()
-  }
-  drawingcnv.released()
-}
-
 // Init GUI Components
 let canvasDiv = document.getElementById("canvas")
 let panelDiv  = document.getElementById("panel")
@@ -1378,7 +1900,7 @@ function setup() {
   setFillerCanvas()
   cnv = createCanvas(windowWidth - panel.width - margin*3, windowHeight - tot_margin)
   centerCanvas()
-  drawingcnv = new DrawingCanvas(width)
+  drawingcnv = new DrawingCanvas()
   drawingcnv.update()
   drawingcnv.grid()
 }
@@ -1410,7 +1932,7 @@ function draw() {
   textAlign(LEFT, LEFT)
   fill(color(150,150,0))
   textSize(18)
-  text(fpsText, drawingcnv.width - 100, 20)
+  text(fpsText, width - 100, 20)
   //there
 }
 
@@ -1441,4 +1963,72 @@ function centerCanvas() {
   let x = floor((windowWidth - panel.width - margin - width)/2)
   let y = floor((windowHeight - height)/2)
   cnv.position(x, y)
+}
+function mouseClicked() {
+  engine.clicked()
+}
+
+let movingGraph = false
+let draggingMassVel = false
+let graphIndex = 0
+let massIndex = 0
+function mousePressed() {
+  //Most of this is logic for moving the graph
+  if(drawingcnv.mouseisover()) {
+    // Moving graph
+    engine.graphs.forEach(element => {
+      if(element.mouseisover()) {
+        graphIndex = engine.graphs.findIndex(thing => thing == element)
+        if(!element.mouseoverinner()) {
+          element.outerDragged = true
+          element.innerDragged = false
+        } else {
+          element.outerDragged = false
+          element.innerDragged = true
+        }
+        element.pressed()
+        movingGraph = true
+      }
+    })
+    // Dragging velocity arrows
+    if(!movingGraph) {
+      engine.dyn_objects.forEach(element => {
+        if(element.ispointmass) {
+          if(element.isOnVelSelector()) {
+            massIndex = engine.dyn_objects.findIndex(thing => thing == element)
+            draggingMassVel = true
+          }
+        }
+      })
+    }
+    // Moving canvas
+    if(!movingGraph && !draggingMassVel) {
+      drawingcnv.pressed()      
+    }
+  }
+}
+ 
+function mouseDragged() {
+  if(drawingcnv.mouseisover()) {
+    if(movingGraph) {
+      engine.graphs[graphIndex].dragged()
+    } 
+    if(!movingGraph && draggingMassVel) {
+      engine.dyn_objects[massIndex].dragVelSelector()
+    }
+    if(!movingGraph && !draggingMassVel) {
+      drawingcnv.dragged()
+    }
+  }
+}
+
+function mouseReleased() {
+  if(movingGraph) {
+    movingGraph = false
+    engine.graphs[graphIndex].released()
+  } else if(draggingMassVel) {
+    draggingMassVel = false
+    engine.dyn_objects[massIndex].releasedVelSelector()
+  }
+  drawingcnv.released()
 }

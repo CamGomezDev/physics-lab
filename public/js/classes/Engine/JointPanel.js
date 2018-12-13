@@ -1,20 +1,30 @@
 class JointPanel {
   placeGravity() {
-    engine.env_interacts.push({vector: createVector(0, -9.8)})
-    this.gravity = engine.env_interacts[engine.env_interacts.length - 1]
+    engine.still_objects_dis.push({vector: createVector(0, -9.8), isgravity: true, id: uuidv4()})
+    this.gravity = engine.still_objects_dis[engine.still_objects_dis.length - 1]
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
+    panel.openControl(this.gravity.id)
   }
 
   removeGravity() {
-    engine.env_interacts.splice(engine.env_interacts.indexOf(this.gravity), 1)
+    engine.still_objects_dis.splice(engine.still_objects_dis.indexOf(this.gravity), 1)
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
   }
 
   placeFloor() {
-    engine.still_objects.push(new Floor(engine.still_objects.length))
-    this.floor = engine.still_objects[engine.still_objects.length - 1]
+    engine.still_objects_dis.push(new Floor())
+    this.floor = engine.still_objects_dis[engine.still_objects_dis.length - 1]
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
+    panel.openControl(this.floor.id)
   }
 
   removeFloor() {
-    engine.still_objects[engine.still_objects.indexOf(this.floor)].remove()
+    engine.still_objects_dis.splice(engine.still_objects_dis.indexOf(this.floor), 1)
+    engine.orderObjects()
+    panel.indexPanel.updateHighlight()
   }
 
   createPointMass() {

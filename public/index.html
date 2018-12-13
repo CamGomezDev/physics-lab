@@ -21,8 +21,8 @@
 <body>
   <!-- GUI -->
   <div id="canvas"></div>
-  <div id="panel" style="display:inline-block">
-    <div style="width:fit-content; display:inline-block">
+  <div id="panel">
+    <div id="top-buttons" style="display:inline-block;">
       <!-- First checkbox -->
       <div style="margin:10px;margin-bottom:0px">
         <div class="pretty p-default p-thick">
@@ -42,14 +42,15 @@
         </div>
       </div>
       <!-- Buttons -->
-      <div><button type="button" id="point-mass" class="btn btn-outline-primary">Mass</button></div>
-      <div><button type="button" id="spring" class="btn btn-outline-primary">Spring</button></div>
-      <div><button type="button" id="incline" class="btn btn-outline-primary">Incline</button></div>
+      <button type="button" id="point-mass" class="btn btn-outline-primary">Mass</button>
+      <button type="button" id="spring" class="btn btn-outline-primary">Spring</button>
+      <button type="button" id="incline" class="btn btn-outline-primary">Incline</button>
     </div>
-    <div style="right: 0px;display: inline-block;position: absolute;right:10px"><button type="button" id="graph" class="btn btn-outline-primary">Graph</button></div>
-    <div id="controlpanel" style="margin:10px; border: solid black 1px;padding:10px;"></div>
+    <div style="display:inline-block; position:absolute; right:10px"><button type="button" id="graph" class="btn btn-outline-primary">Graph</button></div>
+    <div id="controlpanel" style="margin:10px; border:solid black 1px; padding:10px;"></div>
+    <div id="indexpanel" style="margin:10px; border:solid black 1px; padding:0px; overflow-y:auto;"></div>
     <!-- Buttons bottom -->
-    <div class="bottom" style="margin:10px;width:275px">
+    <div id="bottom" class="bottom" style="margin:10px;width:275px;">
       <div class="btn-group" role="group">
         <button type="button" class="btn btn-outline-primary no-outline" id="zoomin"><i class="fas fa-plus"></i></button>
         <button type="button" class="btn btn-outline-primary no-outline" id="zoomout"><i class="fas fa-minus"></i></button>
@@ -64,6 +65,7 @@
       </div>
     </div>
   </div>
-  <script src="js/min/physicslab.core.min.js"></script>  
+  <script src="js/min/physicslab.core.min.js"></script>
+  <!-- <script src="js/main.js"></script> -->
 </body>
 </html>

@@ -1,11 +1,12 @@
 class Spring {
   constructor() {
-    this.located = false
     this.id = uuidv4()
+    this.located = false
     this.length = 1
     this.k = 10  // N/m
     this.isspring = true
     this.elong = 0
+    this.place = 0
     this.end1 = {
       located: false,
       ispivot: true,
@@ -51,16 +52,30 @@ class Spring {
       this.located = true
     }
     if(this.end1.located && this.end2.located) {
+      this.calcNumBorders()
       this.update()
       this.render()
     }
   }
 
-  update() {
-    this.elong = ((this.end1.pos.x - this.end2.pos.x)**2 + (this.end1.pos.y - this.end2.pos.y)**2)**0.5 - this.length
+  calcNumBorders() {
+    this.numBorders = floor(this.length*4)
+    this.widthScl = scl*this.k/10
   }
 
-  render() {
+  update() {
+    this.edgDist = ((this.end1.pos.x - this.end2.pos.x)**2 + (this.end1.pos.y - this.end2.pos.y)**2)**0.5
+    this.renLength = this.numBorders*0.25
+    this.elong = this.edgDist - this.length
+  }
+
+  render(panelHighlight=false) {
+    this.mouseOrIndexHighlight = false
+    if(this.indexHighlightLoad || this.mouseisover()) {
+      this.mouseOrIndexHighlight = true
+    }
+
+    this.calcNumBorders()
     stroke(75)
     fill(175)
 
@@ -79,20 +94,47 @@ class Spring {
     push()
     let savescl = scl
     translate(this.end1.pos.x*scl, this.end1.pos.y*scl)
-    scl = scl*(this.elong + this.length)/this.length
+    scl = scl*this.edgDist
     rotate(angle)
+
+    if(this.mouseOrIndexHighlight || panelHighlight) {
+      strokeWeight(2);stroke(color(100,100,255))
+      line(0, 0, 0.1*scl, 0)
+      strokeWeight(1);stroke(100)
+    }
     line(0, 0, 0.1*scl, 0)
-    for(let i = 0; i < 4; i++) {
-      line((0.1 + i*0.2)*scl, 0, (0.1 + i*0.2 + 0.05)*scl, 0.1*savescl)
-      line((0.1 + i*0.2 + 0.05)*scl, 0.1*savescl, (0.1 + i*0.2 + 0.15)*scl, - 0.1*savescl)
-      line((0.1 + i*0.2 + 0.15)*scl, - 0.1*savescl, (0.1 + (i + 1)*0.2)*scl, 0)
+  
+    let savescl2 = scl
+    scl = scl*4/this.numBorders
+    for(let i = 0; i < this.numBorders; i++) {
+      if(this.mouseOrIndexHighlight || panelHighlight) {
+        strokeWeight(2);stroke(color(100,100,255))
+        line(0.1*savescl2 + (i*0.2)*scl, 0, 0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl)
+        line(0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl, 0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl)
+        line(0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl, 0.1*savescl2 + ((i + 1)*0.2)*scl, 0)
+        strokeWeight(1);stroke(100)
+      }
+      line(0.1*savescl2 + (i*0.2)*scl, 0, 0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl)
+      line(0.1*savescl2 + (i*0.2 + 0.05)*scl, 0.13*this.widthScl, 0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl)
+      line(0.1*savescl2 + (i*0.2 + 0.15)*scl, - 0.13*this.widthScl, 0.1*savescl2 + ((i + 1)*0.2)*scl, 0)
+    }
+    scl = savescl2
+
+    if(this.mouseOrIndexHighlight || panelHighlight) {
+      strokeWeight(2);stroke(color(100,100,255))
+      line(0.9*scl, 0, 1*scl, 0)
+      strokeWeight(1);stroke(100)
     }
     line(0.9*scl, 0, 1*scl, 0)
+
     pop()
     scl = savescl
+
   }
 
-  openControl() {}
+  openControl() {
+    panel.openControl(this.id)
+  }
 
   mouseisover() {
     return false
@@ -103,5 +145,6 @@ class Spring {
       engine.dyn_objects.splice(engine.dyn_objects.indexOf(this), 1)
     }
     engine.dyn_objects_dis.splice(engine.dyn_objects_dis.indexOf(this), 1)
+    engine.renderOrder.splice(engine.renderOrder.indexOf(this), 1)
   }
 }

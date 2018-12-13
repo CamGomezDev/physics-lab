@@ -25,7 +25,10 @@ class GraphPanel {
     })
 
     let panelIn
-    panelIn =  '<div style="text-align:center;font-size:16px;font-weight:700">Graph</div>'
+    panelIn =  '<div style="text-align:center;font-size:16px;font-weight:700">'
+    panelIn += '  Graph'
+    panelIn += '  <button type="button" id="controlremove" class="btn btn-outline-primary" style="margin: 0"><i class="fas fa-trash"></i></button>'
+    panelIn += '</div>'
     panelIn += '<div>Horizontal axis:</div>'
     panelIn += '<div class="btn-group" style="margin-bottom:10px">'
     panelIn += '  <button id="hor-drop-obj" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
@@ -82,9 +85,40 @@ class GraphPanel {
     panelIn += '  </div>'        
     panelIn += '</div>'
 
+    panelIn += '<div style="margin-top:10px">'
+    panelIn += '  Hor:'
+    panelIn +=   '<button style="margin-top:0" id="horzoomingraph" class="btn btn-outline-primary"><i class="fas fa-plus fa-sm"></i></button>'
+    panelIn +=   '<button style="margin-top:0;margin-right:10px" id="horzoomoutgraph" class="btn btn-outline-primary"><i class="fas fa-minus fa-sm"></i></button>'
+    panelIn += '  Ver:'
+    panelIn +=   '<button style="margin-top:0" id="verzoomingraph" class="btn btn-outline-primary"><i class="fas fa-plus fa-sm"></i></button>'
+    panelIn +=   '<button style="margin-top:0" id="verzoomoutgraph" class="btn btn-outline-primary"><i class="fas fa-minus fa-sm"></i></button>'
+    panelIn += '</div>'
+
     document.getElementById("controlpanel").innerHTML = panelIn
+
+    document.getElementById("horzoomingraph").onclick = function() {
+      let center = createVector((panel.focus.plot.cam.x + panel.focus.plot.width/2)/panel.focus.plot.horscl, 0)
+      panel.focus.plot.horscl *= 1.2
+      panel.focus.plot.cam.x = (center.x*panel.focus.plot.horscl - panel.focus.plot.width/2)
+    }
+    document.getElementById("horzoomoutgraph").onclick = function() {
+      let center = createVector((panel.focus.plot.cam.x + panel.focus.plot.width/2)/panel.focus.plot.horscl, 0)
+      panel.focus.plot.horscl *= 1/1.2
+      panel.focus.plot.cam.x = (center.x*panel.focus.plot.horscl - panel.focus.plot.width/2)
+    }
+    document.getElementById("verzoomingraph").onclick = function() {
+      let center = createVector(0, (panel.focus.plot.cam.y + panel.focus.plot.height/2)/panel.focus.plot.verscl)
+      panel.focus.plot.verscl *= 1.2
+      panel.focus.plot.cam.y = (center.y*panel.focus.plot.verscl - panel.focus.plot.height/2)
+    }
+    document.getElementById("verzoomoutgraph").onclick = function() {
+      let center = createVector(0, (panel.focus.plot.cam.y + panel.focus.plot.height/2)/panel.focus.plot.verscl)
+      panel.focus.plot.verscl *= 1/1.2
+      panel.focus.plot.cam.y = (center.y*panel.focus.plot.verscl - panel.focus.plot.height/2)
+    }
+
     this.group.forEach(element1 => {
-      let element1Id = this.group.findIndex(thing => thing == element1)
+      let element1Id = this.group.indexOf(element1)
 
       // When clicking the horizontal left drop...
       document.getElementById(element1.id + 'hor').onclick = () => {
@@ -92,9 +126,9 @@ class GraphPanel {
         let params = ''
         // Add the corresponding params to the right drop...
         element1.params.forEach(element2 => {
-          let element2Id = this.group[element1Id].params.findIndex(thing => thing == element2)
+          let element2Id = this.group[element1Id].params.indexOf(element2)
           // So it executes the execute function in them when clicking (which is on the Param class)
-          params += '<a class="dropdown-item" onclick="panel.interior.group[' + element1Id + '].params[' + element2Id + '].execute(1)" href="#">' + element2.name + '</a>'
+          params += '<a class="dropdown-item" onclick="panel.controlPanel.group[' + element1Id + '].params[' + element2Id + '].execute(1)" href="#">' + element2.name + '</a>'
         })
         document.getElementById("control-hor-params").innerHTML = params
         // And fill with text 'parameter' every time a left selection changes
@@ -107,9 +141,9 @@ class GraphPanel {
         let params = ''
         // Add the corresponding params to the right drop...
         element1.params.forEach(element2 => {
-          let element2Id = this.group[element1Id].params.findIndex(thing => thing == element2)
+          let element2Id = this.group[element1Id].params.indexOf(element2)
           // So it executes the execute function in them when clicking (which is on the Param class)
-          params += '<a class="dropdown-item" onclick="panel.interior.group[' + element1Id + '].params[' + element2Id + '].execute(2)" href="#">' + element2.name + '</a>'
+          params += '<a class="dropdown-item" onclick="panel.controlPanel.group[' + element1Id + '].params[' + element2Id + '].execute(2)" href="#">' + element2.name + '</a>'
         })
         document.getElementById("control-ver-params").innerHTML = params
         // And fill with text 'parameter' every time a left selection changes
