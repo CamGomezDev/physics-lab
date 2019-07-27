@@ -5,14 +5,23 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "start": "node server.js"
   },
   "author": "Camilo Gomez",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.16.4"
+    "express": "^4.17.1"
   },
   "devDependencies": {
-    "nodemon": "^1.18.5"
-  }
+    "nodemon": "^1.19.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dokasov/physics-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dokasov/physics-lab/issues"
+  },
+  "homepage": "https://github.com/dokasov/physics-lab#readme"
 }
