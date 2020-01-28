@@ -1,6 +1,6 @@
 # physics-lab
 
-This is a web application for simulating mechanical physics in 2D with a server written in Node.js/Express.js, and all of the graphics part being handled by the library p5.js. The physics engine and all of the physics calculations were written by me. The main file from which all of the calculations and physics parts are being handled is `public/js/main.js`.
+This is a web application for simulating mechanical physics in 2D with a server written in Node.js/Express.js, and all of the graphics parts being handled by the library p5.js. The physics engine and all of the physics calculations were written by me. The main file from which all of the calculations and physics parts are being handled is `public/js/main.js`.
 
 The main app can be accessed here: http://physicslab.herokuapp.com/ (doesn't work well on mobile).
 
