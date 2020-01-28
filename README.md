@@ -1,11 +1,13 @@
 # physics-lab
 
-Esta es una aplicación web de simulación de física mecánica en 2D con un servidor escrito en Node.js/Express.js, y toda la parte gráfica siendo manejada por la librería p5.js. El motor de física y todos los cálculos físicos fueron escritos por mí. El archivo principal desde el que se controlan todos los cálculos y la parte física es `public/js/main.js`. Se puede acceder aquí: http://physicslab.herokuapp.com/ (no funciona bien en móviles).
+This is a web application for simulating mechanical physics in 2D with a server written in Node.js/Express.js, and all of the graphic part being handled by the library p5.js. The physics engine and all of the physics calculation were written by me. The main file from which all of the calculation and physics parts are being handled is `public/js/main.js`.
+
+The main app can be accessed here: http://physicslab.herokuapp.com/ (doesn't work well on mobile).
 
 <p align="center">
   <img src="https://github.com/dokasov/physics-lab/blob/master/img/git.gif">
 </p>
 
-Para comenzar a interactuar solo se deben presionar los botones de arriba a la derecha como Mass o Incline y añadirlos al mundo. Se pueden activar cosas como la gravedad o el piso, y ya después se presiona el botón Play abajo a la derecha. El código está poco comentado y los comentarios están en inglés.
+To begin the interaction you must only press the buttons on the upper right like Mass or Incline and add them to the world (by clicking any part of the grid). You can toggle on thinks like gravity or the floor, and then just press Play on the bottom right. The code is not very commented.
 
-Esto se hizo para participar en la Google Science Fair.
+This was done to participate on the Google Science Fair.
