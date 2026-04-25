@@ -18,10 +18,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dokasov/physics-lab.git"
+    "url": "git+https://github.com/CamGomezDev/physics-lab.git"
   },
   "bugs": {
-    "url": "https://github.com/dokasov/physics-lab/issues"
+    "url": "https://github.com/CamGomezDev/physics-lab/issues"
   },
-  "homepage": "https://github.com/dokasov/physics-lab#readme"
+  "homepage": "https://github.com/CamGomezDev/physics-lab#readme"
 }

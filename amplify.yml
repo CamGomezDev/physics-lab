@@ -1,0 +1,10 @@
+version: 1
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "Static site detected; deploying files from public/"
+  artifacts:
+    baseDirectory: public
+    files:
+      - '**/*'
