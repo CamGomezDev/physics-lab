@@ -2,6 +2,8 @@
 
 This is a web application for simulating mechanical physics in 2D. The deployed app is a static site served from `public/`, and all of the graphics are handled by p5.js. The physics engine and all of the physics calculations were written by me. The main file from which all of the calculations and physics parts are being handled is `public/js/main.js`.
 
+The main app can be accessed at [physicslab.io](https://physicslab.io/).
+
 <p align="center">
   <img src="https://github.com/CamGomezDev/physics-lab/blob/master/img/git.gif">
 </p>
